@@ -1,0 +1,2278 @@
+/*
+ * SPDX-FileCopyrightText: 2020-2026 Aurora OSS
+ * SPDX-FileCopyrightText: 2023-2024 The Calyx Institute
+ * SPDX-FileCopyrightText: 2021-2026 David Weinstein, Electronic Frontier Foundation
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+syntax = "proto2";
+
+message AndroidAppDeliveryData {
+  optional int64 download_size = 1;
+  optional string sha1 = 2;
+  optional string download_url = 3;
+  repeated AppFileMetadata additional_file = 4;
+  repeated HttpCookie download_auth_cookie = 5;
+  optional bool forward_locked = 6;
+  optional int64 refund_timeout = 7;
+  optional bool server_initiated = 8 [default = true];
+  optional int64 post_install_refund_window_millis = 9;
+  optional bool immediate_start_needed = 10;
+  optional AndroidAppPatchData patch_data = 11;
+  optional EncryptionParams encryption_params = 12;
+  optional string compressed_download_url = 13;
+  optional int64 compressed_size = 14;
+  repeated SplitDeliveryData split_delivery_data = 15;
+  optional int32 install_location = 16;
+  optional int64 type = 17;
+  optional CompressedAppData compressed_app_data = 18;
+  optional string sha256 = 19;
+  optional DexMetadata dex_metadata = 21;
+}
+
+message DexMetadata {
+  optional int64 download_size = 1;
+  optional string sha256 = 2;
+  optional string download_url = 3;
+}
+
+message SplitDeliveryData {
+  optional string name = 1;
+  optional int64 download_size = 2;
+  optional int64 compressed_size = 3;
+  optional string sha1 = 4;
+  optional string download_url = 5;
+  optional string compressed_download_url = 6;
+  optional AndroidAppPatchData patch_data = 7;
+  optional CompressedAppData compressed_app_data = 8;
+  optional string sha256 = 9;
+}
+
+message AndroidAppPatchData {
+  optional int32 base_version_code = 1;
+  optional string base_sha1 = 2;
+  optional string download_url = 3;
+  optional int32 patch_format = 4[default = 1];
+  optional int64 max_patch_size = 5;
+}
+
+message CompressedAppData{
+  optional int64 type = 1;
+  optional int64 size = 2;
+  optional string download_url = 3;
+}
+
+message AppFileMetadata {
+  optional int32 file_type = 1;
+  optional int32 version_code = 2;
+  optional int64 download_size = 3;
+  optional string download_url = 4;
+  optional AndroidAppPatchData patch_data = 5;
+  optional int64 compressed_size = 6;
+  optional string compressed_download_url = 7;
+  optional string sha1 = 8;
+}
+
+message EncryptionParams {
+  optional int32 version = 1;
+  optional string encryption_key = 2;
+  optional string hmac_key = 3;
+}
+
+message HttpCookie {
+  optional string name = 1;
+  optional string value = 2;
+}
+
+message Address {
+  optional string name = 1;
+  optional string address_line1 = 2;
+  optional string address_line2 = 3;
+  optional string city = 4;
+  optional string state = 5;
+  optional string postal_code = 6;
+  optional string postal_country = 7;
+  optional string dependent_locality = 8;
+  optional string sorting_code = 9;
+  optional string language_code = 10;
+  optional string phone_number = 11;
+  optional bool deprecated_is_reduced = 12;
+  optional string first_name = 13;
+  optional string last_name = 14;
+  optional string email = 15;
+}
+
+message BrowseLink {
+  optional string name = 1;
+  optional string data_url = 3;
+  optional bytes server_logs_cookie = 4;
+  optional Image icon = 5;
+}
+
+message BrowseResponse {
+  optional string contents_url = 1;
+  optional string promo_url = 2;
+  repeated BrowseLink category = 3;
+  repeated BrowseLink breadcrumb = 4;
+  repeated QuickLink quick_link = 5;
+  optional bytes server_logs_cookie = 6;
+  optional string title = 7;
+  optional int32 backend_id = 8;
+  optional BrowseTab browse_tab = 9;
+  optional int32 landing_tab_index = 10;
+  optional int32 quick_link_tab_index = 11;
+  optional int32 quick_link_fallback_tab_index = 12;
+  optional bool is_family_safe = 14;
+  optional string share_url = 18;
+}
+
+message DirectPurchase {
+  optional string details_url = 1;
+  optional string purchase_item_id = 2;
+  optional string parent_item_id = 3;
+  optional int32 offer_type = 4[default = 1];
+}
+
+message RedeemGiftCard {
+  optional string prefill_code = 1;
+  optional string partner_payload = 2;
+}
+
+message ResolvedLink {
+  optional string details_url = 1;
+  optional string browse_url = 2;
+  optional string search_url = 3;
+  optional DirectPurchase direct_purchase = 4;
+  optional string home_url = 5;
+  optional RedeemGiftCard redeem_gift_card = 6;
+  optional bytes server_logs_cookie = 7;
+  optional DocId doc_id = 8;
+  optional string wishlist_url = 9;
+  optional int32 backend = 10;
+  optional string query = 11;
+  optional string my_account_url = 12;
+  optional HelpCenter help_center = 13;
+}
+
+message HelpCenter {
+  optional string context_id = 1;
+}
+
+message QuickLink {
+  optional string name = 1;
+  optional Image image = 2;
+  optional ResolvedLink link = 3;
+  optional bool display_required = 4;
+  optional bytes server_logs_cookie = 5;
+  optional int32 backend_id = 6;
+  optional bool prism_style = 7;
+}
+
+message BrowseTab {
+  optional string title = 1;
+  optional bytes server_logs_cookie = 2;
+  optional string list_url = 3;
+  repeated BrowseLink browse_link = 4;
+  repeated QuickLink quick_link = 5;
+  optional string quick_link_title = 6;
+  optional string categories_title = 7;
+  optional int32 backend_id = 8;
+  optional string highlights_banner_url = 9;
+}
+
+message BuyResponse {
+  optional PurchaseNotificationResponse purchase_response = 1;
+  optional group CheckoutInfo = 2 {
+    optional LineItem item = 3;
+    repeated LineItem sub_item = 4;
+    repeated group CheckoutOption = 5 {
+      optional string form_of_payment = 6;
+      optional string encoded_adjusted_cart = 7;
+      optional string instrument_id = 15;
+      repeated LineItem item = 16;
+      repeated LineItem sub_item = 17;
+      optional LineItem total = 18;
+      repeated string footer_html = 19;
+      optional int32 instrument_family = 29;
+      repeated int32 deprecated_instrument_inapplicable_reason = 30;
+      optional bool selected_instrument = 32;
+      optional LineItem summary = 33;
+      repeated string footnote_html = 35;
+      optional Instrument instrument = 43;
+      optional string purchase_cookie = 45;
+      repeated string disabled_reason = 48;
+    }
+    optional string deprecated_checkout_url = 10;
+    optional string add_instrument_url = 11;
+    repeated string footer_html = 20;
+    repeated int32 eligible_instrument_family = 31;
+    repeated string footnote_html = 36;
+    repeated Instrument eligible_instrument = 44;
+  }
+  optional string continue_via_url = 8;
+  optional string purchase_status_url = 9;
+  optional string checkout_service_id = 12;
+  optional bool checkout_token_required = 13;
+  optional string base_checkout_url = 14;
+  repeated string tos_checkbox_html = 37;
+  optional int32 iab_permission_error = 38;
+  optional PurchaseStatusResponse purchase_status_response = 39;
+  optional string purchase_cookie = 46;
+  optional Challenge challenge = 49;
+  optional string add_instrument_prompt_html = 50;
+  optional string confirm_button_text = 51;
+  optional string permission_error_title_text = 52;
+  optional string permission_error_message_text = 53;
+  optional bytes server_logs_cookie = 54;
+  optional string encoded_delivery_token = 55;
+  optional string unknown_token = 56;
+}
+
+message LineItem {
+  optional string name = 1;
+  optional string description = 2;
+  optional Offer offer = 3;
+  optional Money amount = 4;
+}
+
+message Money {
+  optional int64 micros = 1;
+  optional string currency_code = 2;
+  optional string formatted_amount = 3;
+}
+
+message PurchaseNotificationResponse {
+  optional int32 status = 1;
+  optional DebugInfo debug_info = 2;
+  optional string localized_error_message = 3;
+  optional string purchase_id = 4;
+}
+
+message PurchaseStatusResponse {
+  optional int32 status = 1;
+  optional string status_msg = 2;
+  optional string status_title = 3;
+  optional string brief_message = 4;
+  optional string info_url = 5;
+  optional LibraryUpdate library_update = 6;
+  optional Instrument rejected_instrument = 7;
+  optional AndroidAppDeliveryData app_delivery_data = 8;
+}
+
+message PurchaseHistoryDetails {
+  optional int64 purchase_timestamp_millis = 2;
+  optional string purchase_details_html = 3;
+  optional Offer offer = 5;
+  optional string purchase_status = 6;
+  optional string title_byline_html = 7;
+  optional bytes client_refund_context = 8;
+  optional Image purchase_details_image = 9;
+}
+
+message BillingProfileResponse {
+  optional int32 result = 1;
+  optional BillingProfile billing_profile = 2;
+  optional string user_message_html = 3;
+}
+
+message CheckInstrumentResponse {
+  optional bool user_has_valid_instrument = 1;
+  optional bool checkout_token_required = 2;
+  repeated Instrument instrument = 4;
+  repeated Instrument eligible_instrument = 5;
+}
+
+message InstrumentSetupInfoResponse {
+  repeated InstrumentSetupInfo setup_info = 1;
+  optional bool checkout_token_required = 2;
+}
+
+message RedeemGiftCardRequest {
+  optional string gift_card_pin = 1;
+  optional Address address = 2;
+  repeated string accepted_legal_document_id = 3;
+  optional string checkout_token = 4;
+}
+
+message RedeemGiftCardResponse {
+  optional int32 result = 1;
+  optional string user_message_html = 2;
+  optional string balance_html = 3;
+  optional AddressChallenge address_challenge = 4;
+  optional bool checkout_token_required = 5;
+}
+
+message UpdateInstrumentRequest {
+  optional Instrument instrument = 1;
+  optional string checkout_token = 2;
+}
+
+message UpdateInstrumentResponse {
+  optional int32 result = 1;
+  optional string instrument_id = 2;
+  optional string user_message_html = 3;
+  repeated InputValidationError error_input_field = 4;
+  optional bool checkout_token_required = 5;
+  optional RedeemedPromoOffer redeemed_offer = 6;
+}
+
+message InitiateAssociationResponse {
+  optional string user_token = 1;
+}
+
+message VerifyAssociationResponse {
+  optional int32 status = 1;
+  optional Address billing_address = 2;
+  optional CarrierTos carrier_tos = 3;
+  optional string carrier_error_message = 4;
+}
+
+message AddressChallenge {
+  optional string response_address_param = 1;
+  optional string response_checkboxes_param = 2;
+  optional string title = 3;
+  optional string description_html = 4;
+  repeated FormCheckbox checkbox = 5;
+  optional Address address = 6;
+  repeated InputValidationError error_input_field = 7;
+  optional string error_html = 8;
+  repeated int32 required_field = 9;
+  repeated Country supported_country = 10;
+}
+
+message AuthenticationChallenge {
+  optional int32 authentication_type = 1;
+  optional string response_authentication_type_param = 2;
+  optional string response_retry_count_param = 3;
+  optional string pin_header_text = 4;
+  optional string pin_description_text_html = 5;
+  optional string gaia_header_text = 6;
+  optional string gaia_description_text_html = 7;
+  optional string gaia_footer_text_html = 8;
+  optional FormCheckbox gaia_opt_out_checkbox = 9;
+  optional string gaia_opt_out_description_text_html = 10;
+}
+
+message Challenge {
+  optional AddressChallenge address_challenge = 1;
+  optional AuthenticationChallenge authentication_challenge = 2;
+  optional WebViewChallenge web_view_challenge = 3;
+}
+
+message Country {
+  optional string region_code = 1;
+  optional string display_name = 2;
+}
+
+message FormCheckbox {
+  optional string description = 1;
+  optional bool checked = 2;
+  optional bool required = 3;
+  optional string id = 4;
+}
+
+message InputValidationError {
+  optional int32 input_field = 1;
+  optional string error_message = 2;
+}
+
+message WebViewChallenge {
+  optional string start_url = 1;
+  optional string target_url_regexp = 2;
+  optional string cancel_button_display_label = 3;
+  optional string response_target_url_param = 4;
+  optional string cancel_url_regexp = 5;
+  optional string title = 6;
+}
+
+message AddCreditCardPromoOffer {
+  optional string header_text = 1;
+  optional string description_html = 2;
+  optional Image image = 3;
+  optional string introductory_text_html = 4;
+  optional string offer_title = 5;
+  optional string no_action_description = 6;
+  optional string terms_and_conditions_html = 7;
+}
+
+message AvailablePromoOffer {
+  optional AddCreditCardPromoOffer add_credit_card_offer = 1;
+}
+
+message CheckPromoOfferResponse {
+  repeated AvailablePromoOffer available_offer = 1;
+  optional RedeemedPromoOffer redeemed_offer = 2;
+  optional bool checkout_token_required = 3;
+}
+
+message RedeemedPromoOffer {
+  optional string header_text = 1;
+  optional string description_html = 2;
+  optional Image image = 3;
+}
+
+message DocId {
+  optional string backend_doc_id = 1;
+  optional int32 type = 2[default = 1];
+  optional int32 backend = 3;
+}
+
+message Install {
+  optional fixed64 android_id = 1;
+  optional int32 version = 2;
+  optional bool bundled = 3;
+  optional bool pending = 4;
+  optional int64 last_updated = 5;
+}
+
+message GroupLicenseKey {
+  optional fixed64 dasher_customer_id = 1;
+  optional DocId doc_id = 2;
+  optional int32 licensed_offer_type = 3 [default = 1];
+  optional int32 type = 4;
+  optional int32 rental_period_days = 5;
+}
+
+message LicenseTerms {
+  optional GroupLicenseKey group_license_key = 1;
+}
+
+message Offer {
+  optional int64 micros = 1;
+  optional string currency_code = 2;
+  optional string formatted_amount = 3;
+  repeated Offer converted_price = 4;
+  optional bool checkout_flow_required = 5;
+  optional int64 full_price_micros = 6;
+  optional string formatted_full_amount = 7;
+  optional int32 offer_type = 8[default = 1];
+  optional RentalTerms rental_terms = 9;
+  optional int64 on_sale_date = 10;
+  repeated string promotion_label = 11;
+  optional SubscriptionTerms subscription_terms = 12;
+  optional string formatted_name = 13;
+  optional string formatted_description = 14;
+  optional bool preorder = 15;
+  optional int32 on_sale_date_display_time_zone_offset_millis = 16;
+  optional int32 licensed_offer_type = 17;
+  optional SubscriptionContentTerms subscription_content_terms = 18;
+  optional string offer_id = 19;
+  optional int64 preorder_fulfillment_display_date = 20;
+  optional LicenseTerms license_terms = 21;
+  optional bool sale = 22;
+  optional VoucherTerms voucher_terms = 23;
+  repeated OfferPayment offer_payment = 24;
+  optional bool repeat_last_payment = 25;
+  optional string buy_button_label = 26;
+  optional bool instant_purchase_enabled = 27;
+  optional int64 sale_end_timestamp = 30;
+  optional string sale_message = 31;
+}
+
+message MonthAndDay {
+  optional uint32 month = 1;
+  optional uint32 day = 2;
+}
+
+message OfferPaymentPeriod {
+  optional TimePeriod duration = 1;
+  optional MonthAndDay start = 2;
+  optional MonthAndDay end = 3;
+}
+
+message OfferPaymentOverride {
+  optional int64 micros = 1;
+  optional MonthAndDay start = 2;
+  optional MonthAndDay end = 3;
+}
+
+message OfferPayment {
+  optional int64 micros = 1;
+  optional string currency_code = 2;
+  optional OfferPaymentPeriod offer_payment_period = 3;
+  repeated OfferPaymentOverride offer_payment_override = 4;
+}
+
+message VoucherTerms {
+}
+
+message RentalTerms {
+  optional int32 deprecated_grant_period_seconds = 1;
+  optional int32 deprecated_activate_period_seconds = 2;
+  optional TimePeriod grant_period = 3;
+  optional TimePeriod activate_period = 4;
+}
+
+message SignedData {
+  optional string signed_data = 1;
+  optional string signature = 2;
+}
+
+message SubscriptionContentTerms {
+  optional DocId required_subscription = 1;
+}
+
+message GroupLicenseInfo {
+  optional int32 licensed_offer_type = 1;
+  optional fixed64 gaia_group_id = 2;
+}
+
+message LicensedDocumentInfo {
+  repeated fixed64 gaia_group_id = 1;
+}
+
+message OwnershipInfo {
+  optional int64 initiation_timestamp = 1;
+  optional int64 valid_until_timestamp = 2;
+  optional bool auto_renewing = 3;
+  optional int64 refund_timeout_timestamp = 4;
+  optional int64 post_delivery_refund_window_millis = 5;
+  optional SignedData developer_purchase_info = 6;
+  optional bool pre_ordered = 7;
+  optional bool hidden = 8;
+  optional RentalTerms rental_terms = 9;
+  optional GroupLicenseInfo group_license_info = 10;
+  optional LicensedDocumentInfo licensed_document_info = 11;
+  optional int32 quantity = 12;
+  optional int64 library_expiration_timestamp = 14;
+}
+
+message SubscriptionTerms {
+  optional TimePeriod recurring_period = 1;
+  optional TimePeriod trial_period = 2;
+}
+
+message TimePeriod {
+  optional int32 unit = 1;
+  optional int32 count = 2;
+}
+
+message BillingAddressSpec {
+  optional int32 billing_address_type = 1;
+  repeated int32 required_field = 2;
+}
+
+message BillingProfile {
+  repeated Instrument instrument = 1;
+  optional string selected_external_instrument_id = 2;
+  repeated BillingProfileOption billing_profile_option = 3;
+}
+
+message BillingProfileOption {
+  optional int32 type = 1;
+  optional string display_title = 2;
+  optional string external_instrument_id = 3;
+  optional TopupInfo topup_info = 4;
+  optional CarrierBillingInstrumentStatus carrier_billing_instrument_status = 5;
+}
+
+message CarrierBillingCredentials {
+  optional string value = 1;
+  optional int64 expiration = 2;
+}
+
+message CarrierBillingInstrument {
+  optional string instrument_key = 1;
+  optional string account_type = 2;
+  optional string currency_code = 3;
+  optional int64 transaction_limit = 4;
+  optional string subscriber_identifier = 5;
+  optional EncryptedSubscriberInfo encrypted_subscriber_info = 6;
+  optional CarrierBillingCredentials credentials = 7;
+  optional CarrierTos accepted_carrier_tos = 8;
+}
+
+message CarrierBillingInstrumentStatus {
+  optional CarrierTos carrier_tos = 1;
+  optional bool association_required = 2;
+  optional bool password_required = 3;
+  optional PasswordPrompt carrier_password_prompt = 4;
+  optional int32 api_version = 5;
+  optional string name = 6;
+  optional DeviceAssociation device_association = 7;
+  optional string carrier_support_phone_number = 8;
+}
+
+message CarrierTos {
+  optional CarrierTosEntry dcb_tos = 1;
+  optional CarrierTosEntry pii_tos = 2;
+  optional bool needs_dcb_tos_acceptance = 3;
+  optional bool needs_pii_tos_acceptance = 4;
+}
+
+message CarrierTosEntry {
+  optional string url = 1;
+  optional string version = 2;
+}
+
+message CreditCardInstrument {
+  optional int32 type = 1;
+  optional string escrow_handle = 2;
+  optional string last_digits = 3;
+  optional int32 expiration_month = 4;
+  optional int32 expiration_year = 5;
+  repeated EfeParam escrow_efe_param = 6;
+}
+
+message DeviceAssociation {
+  optional string user_token_request_message = 1;
+  optional string user_token_request_address = 2;
+}
+
+message DisabledInfo {
+  optional int32 disabled_reason = 1;
+  optional string disabled_message_html = 2;
+  optional string error_message = 3;
+}
+
+message EfeParam {
+  optional int32 key = 1;
+  optional string value = 2;
+}
+
+message Instrument {
+  optional string instrument_id = 1;
+  optional Address billing_address = 2;
+  optional CreditCardInstrument credit_card = 3;
+  optional CarrierBillingInstrument carrier_billing = 4;
+  optional BillingAddressSpec billing_address_spec = 5;
+  optional int32 instrument_family = 6;
+  optional CarrierBillingInstrumentStatus carrier_billing_status = 7;
+  optional string display_title = 8;
+  optional TopupInfo topup_info_deprecated = 9;
+  optional int32 version = 10;
+  optional StoredValueInstrument stored_value = 11;
+  repeated DisabledInfo disabled_info = 12;
+}
+
+message InstrumentSetupInfo {
+  optional int32 instrument_family = 1;
+  optional bool supported = 2;
+  optional AddressChallenge address_challenge = 3;
+  optional Money balance = 4;
+  repeated string footer_html = 5;
+}
+
+message PasswordPrompt {
+  optional string prompt = 1;
+  optional string forgot_password_url = 2;
+}
+
+message StoredValueInstrument {
+  optional int32 type = 1;
+  optional Money balance = 2;
+  optional TopupInfo topup_info = 3;
+}
+
+message TopupInfo {
+  optional string options_container_doc_id_deprecated = 1;
+  optional string options_list_url = 2;
+  optional string subtitle = 3;
+  optional DocId options_container_doc_id = 4;
+}
+
+message ConsumePurchaseResponse {
+  optional LibraryUpdate library_update = 1;
+  optional int32 status = 2;
+}
+
+message ContainerMetadata {
+  optional string browse_url = 1;
+  optional string next_page_url = 2;
+  optional double relevance = 3;
+  optional int64 estimated_results = 4;
+  optional string analytics_cookie = 5;
+  optional bool ordered = 6;
+  repeated ContainerView container_view = 7;
+  optional Image left_icon = 8;
+}
+
+message ContainerView {
+  optional bool selected = 1;
+  optional string title = 2;
+  optional string list_url = 3;
+  optional bytes server_logs_cookie = 4;
+}
+
+message FlagContentResponse {
+}
+
+message ClientDownloadRequest {
+  message ApkInfo {
+    optional string package_name = 1;
+    optional int32 version_code = 2;
+  }
+  message CertificateChain {
+    message Element {
+      optional bytes certificate = 1;
+      optional bool parsed_successfully = 2;
+      optional bytes subject = 3;
+      optional bytes issuer = 4;
+      optional bytes fingerprint = 5;
+      optional int64 expiry_time = 6;
+      optional int64 start_time = 7;
+    }
+    repeated Element element = 1;
+  }
+  message Digests {
+    optional bytes sha256 = 1;
+    optional bytes sha1 = 2;
+    optional bytes md5 = 3;
+  }
+  message Resource {
+    optional string url = 1;
+    optional int32 type = 2;
+    optional bytes remote_ip = 3;
+    optional string referrer = 4;
+  }
+  message SignatureInfo {
+    repeated CertificateChain certificate_chain = 1;
+    optional bool trusted = 2;
+  }
+  optional string url = 1;
+  optional Digests digests = 2;
+  optional int64 length = 3;
+  repeated Resource resources = 4;
+  optional SignatureInfo signature = 5;
+  optional bool user_initiated = 6;
+  repeated string client_asn = 8;
+  optional string file_basename = 9;
+  optional int32 download_type = 10;
+  optional string locale = 11;
+  optional ApkInfo apk_info = 12;
+  optional fixed64 android_id = 13;
+  repeated string originating_packages = 15;
+  optional SignatureInfo originating_signature = 17;
+}
+
+message ClientDownloadResponse {
+  message MoreInfo {
+    optional string description = 1;
+    optional string url = 2;
+  }
+  optional int32 verdict = 1;
+  optional MoreInfo more_info = 2;
+  optional bytes token = 3;
+}
+
+message ClientDownloadStatsRequest {
+  optional int32 user_decision = 1;
+  optional bytes token = 2;
+}
+
+message DebugInfo {
+  repeated string message = 1;
+  repeated group Timing = 2 {
+    optional string name = 3;
+    optional double time_in_ms = 4;
+  }
+}
+
+message DebugSettingsResponse {
+  optional string play_country_override = 1;
+  optional string play_country_debug_info = 2;
+}
+
+message DeliveryResponse {
+  optional int32 status = 1[default = 1];
+  optional AndroidAppDeliveryData app_delivery_data = 2;
+}
+
+message BulkDetailsEntry {
+  optional Item item = 1;
+}
+
+message BulkDetailsRequest {
+  repeated string doc_id = 1;
+  optional bool include_child_docs = 2[default = true];
+  optional bool include_details = 3;
+  optional string source_package_name = 4;
+  repeated int32 installed_version_code = 7;
+}
+
+message BulkDetailsResponse {
+  repeated BulkDetailsEntry entry = 1;
+}
+
+message DetailsResponse {
+  optional string analytics_cookie = 2;
+  optional Review user_review = 3;
+  optional Item item = 4;
+  optional string footer_html = 5;
+  optional bytes server_logs_cookie = 6;
+  repeated DiscoveryBadge discovery_badge = 7;
+  optional bool enable_reviews = 8 [default = true];
+  optional Features features = 12;
+  optional string details_stream_url = 13;
+  optional string user_review_url = 14;
+  optional string post_acquire_details_stream_url = 17;
+}
+
+message DiscoveryBadge {
+  optional string label = 1;
+  optional Image image = 2;
+  optional int32 background_color = 3;
+  optional DiscoveryBadgeLink badge_container1 = 4;
+  optional bytes server_logs_cookie = 5;
+  optional bool is_plus_one = 6;
+  optional float aggregate_rating = 7;
+  optional int32 user_star_rating = 8;
+  optional string download_count = 9;
+  optional string download_units = 10;
+  optional string content_description = 11;
+  optional PlayerBadge player_badge = 12;
+  optional bytes family_age_range_badge = 13;
+  optional bytes family_category_badge = 14;
+}
+
+message PlayerBadge {
+  optional Image overlay_icon = 1;
+}
+
+message DiscoveryBadgeLink {
+  optional Link link = 1;
+  optional string user_reviews_url = 2;
+  optional string critic_reviews_url = 3;
+}
+
+message Features {
+  repeated Feature feature_presence = 1;
+  repeated Feature feature_rating = 2;
+}
+
+message Feature {
+  optional string label = 1;
+  optional string value = 3;
+}
+
+message DeviceConfigurationProto {
+  optional int32 touch_screen = 1;
+  optional int32 keyboard = 2;
+  optional int32 navigation = 3;
+  optional int32 screen_layout = 4;
+  optional bool has_hard_keyboard = 5;
+  optional bool has_five_way_navigation = 6;
+  optional int32 screen_density = 7;
+  optional int32 gl_es_version = 8;
+  repeated string system_shared_library = 9;
+  repeated string system_available_feature = 10;
+  repeated string native_platform = 11;
+  optional int32 screen_width = 12;
+  optional int32 screen_height = 13;
+  repeated string system_supported_locale = 14;
+  repeated string gl_extension = 15;
+  optional int32 device_class = 16;
+  optional int32 max_apk_download_size_mb = 17[default = 50];
+  optional int32 smallest_screen_width_dp = 18;
+  optional int32 low_ram_device = 19[default = 0];
+  optional int64 total_memory_bytes = 20[default = 8354971648];
+  optional int32 max_num_of_cpu_cores = 21[default = 8];
+  repeated DeviceFeature device_feature = 26;
+  optional int32 unknown28 = 28[default = 0];
+  optional int32 unknown30 = 30[default = 4];
+}
+
+message DeviceFeature{
+  optional string name = 1;
+  optional int32 value = 2;
+}
+
+message Document {
+  optional DocId doc_id = 1;
+  optional DocId fetch_doc_id = 2;
+  optional DocId sample_doc_id = 3;
+  optional string title = 4;
+  optional string url = 5;
+  repeated string snippet = 6;
+  optional Offer price_deprecated = 7;
+  optional Availability availability = 9;
+  repeated Image image = 10;
+  repeated Document child = 11;
+  optional AggregateRating aggregate_rating = 13;
+  repeated Offer offer = 14;
+  repeated TranslatedText translated_snippet = 15;
+  repeated DocumentVariant document_variant = 16;
+  repeated string category_id = 17;
+  repeated Document decoration = 18;
+  repeated Document parent = 19;
+  optional string privacy_policy_url = 20;
+  optional string consumption_url = 21;
+  optional int32 estimated_num_children = 22;
+  optional string subtitle = 23;
+}
+
+message DocumentVariant {
+  optional int32 variation_type = 1;
+  optional Rule rule = 2;
+  optional string title = 3;
+  repeated string snippet = 4;
+  optional string recent_changes = 5;
+  repeated TranslatedText auto_translation = 6;
+  repeated Offer offer = 7;
+  optional int64 channel_id = 9;
+  repeated Document child = 10;
+  repeated Document decoration = 11;
+  repeated Image image = 12;
+  repeated string category_id = 13;
+  optional string subtitle = 14;
+}
+
+message SectionImage {
+  repeated ImageContainer image_container = 1;
+}
+
+message ImageContainer {
+  optional Image image = 4;
+}
+
+message Image {
+  optional int32 image_type = 1;
+  optional group Dimension = 2 {
+    optional int32 width = 3;
+    optional int32 height = 4;
+    optional int32 aspect_ratio = 18;
+  }
+  optional string image_url = 5;
+  optional string alt_text_localized = 6;
+  optional string secure_url = 7;
+  optional int32 position_in_sequence = 8;
+  optional bool supports_fife_url_options = 9;
+  optional group Citation = 10 {
+    optional string title_localized = 11;
+    optional string url = 12;
+  }
+  optional int32 duration_seconds = 14;
+  optional string fill_color_rgb = 15;
+  optional bool autogen = 16;
+  optional Attribution attribution = 17;
+  optional string background_color_rgb = 19;
+  optional ImagePalette palette = 20;
+  optional int32 device_class = 21;
+  optional bool supports_fife_monogram_option = 22;
+  optional string image_url_alt = 28;
+}
+
+message Attribution {
+  optional string source_title = 1;
+  optional string source_url = 2;
+  optional string license_title = 3;
+  optional string license_url = 4;
+}
+
+message ImagePalette {
+  optional string light_vibrant_rgb = 1;
+  optional string vibrant_rgb = 2;
+  optional string dark_vibrant_rgb = 3;
+  optional string light_muted_rgb = 4;
+  optional string muted_rgb = 5;
+  optional string dark_muted_rgb = 6;
+}
+
+message TranslatedText {
+  optional string text = 1;
+  optional string source_locale = 2;
+  optional string target_locale = 3;
+}
+
+message PlusOneData {
+  optional bool set_by_user = 1;
+  optional int64 total = 2;
+  optional int64 circles_total = 3;
+  repeated PlusPerson circles_people = 4;
+}
+
+message PlusPerson {
+  optional string display_name = 2;
+  optional string profile_image_url = 4;
+}
+
+message AppDetails {
+  optional string developer_name = 1;
+  optional int32 major_version_number = 2;
+  optional int64 version_code = 3;
+  optional string version_string = 4;
+  optional string title = 5;
+  repeated string app_category = 7;
+  optional int32 content_rating = 8;
+  optional int64 info_download_size = 9;
+  repeated string permission = 10;
+  optional string developer_email = 11;
+  optional string developer_website = 12;
+  optional string info_download = 13;
+  optional string package_name = 14;
+  optional string recent_changes_html = 15;
+  optional string info_updated_on = 16;
+  repeated FileMetadata file = 17;
+  optional string app_type = 18;
+  repeated string certificate_hash = 19;
+  optional bool varies_with_device = 21 [default = true];
+  repeated CertificateSet certificate_set = 22;
+  repeated string auto_acquire_free_app_if_higher_version_available_tag = 23;
+  optional bool has_instant_link = 24;
+  repeated string split_id = 25;
+  optional bool gamepad_required = 26;
+  optional bool externally_hosted = 27;
+  optional bool ever_externally_hosted = 28;
+  optional string install_notes = 30;
+  optional int32 install_location = 31;
+  optional int32 target_sdk_version = 32;
+  optional string has_preregistration_promo_code = 33;
+  optional Dependencies dependencies = 34;
+  optional TestingProgramInfo testing_program_info = 35;
+  optional EarlyAccessInfo early_access_info = 36;
+  optional EditorChoice editor_choice = 41;
+  optional string instant_link = 43;
+  optional string developer_address = 45;
+  optional Publisher publisher = 46;
+  optional string category_name = 48;
+  optional int64 download_count = 53;
+  optional string download_label_display = 61;
+  optional AppLaunch app_launch = 64;
+  optional TagGroup tag_group = 66;
+  optional string in_app_product = 67;
+  optional string download_label_abbreviated = 77;
+  optional string download_label = 78;
+  optional Compatibility compatibility = 82;
+  optional Support support = 86;
+}
+
+message AppLaunch {
+  optional string date = 1;
+  optional Time time = 2;
+
+  message Time {
+      optional int64 timestamp = 1;
+      optional int64 unknown = 2;
+  }
+}
+
+message TagGroup {
+  optional TagType type1 = 1;
+  optional TagType type2 = 2;
+  optional TagType type3 = 3;
+  optional TagType type4 = 4;
+  optional TagType type5 = 5;
+  optional TagType type6 = 6;
+}
+
+message TagType {
+  repeated TagEntry entries = 1;
+}
+
+message TagEntry {
+  optional string name = 1;
+  optional TagMetadata metadata = 2;
+  optional string category = 3;
+}
+
+message TagMetadata {
+  oneof metadata_one_of {
+    TagData category = 3;
+    TagData search = 4;
+  }
+}
+
+message TagData {
+  optional string url = 1;
+  optional string label = 2;
+}
+
+message Support {
+  optional string developer_name = 1;
+  optional string developer_email = 2;
+  optional string developer_address = 3;
+  optional string developer_phone_number = 4;
+}
+
+message Compatibility {
+  repeated ActiveDevice active_devices = 1;
+}
+
+message ActiveDevice {
+  optional string required_os = 1;
+  optional string name = 2;
+}
+
+message ModifyLibrary{
+  optional string id = 1;
+  optional string package_to_add = 2;
+  optional string package_to_remove = 3;
+}
+
+message Publisher{
+  optional PublisherStream publisher_stream = 2;
+}
+
+message PublisherStream{
+  optional string more_url = 3;
+  optional string query = 11;
+  optional string browse_url = 83;
+}
+
+message EditorChoice{
+  repeated string bulletins = 1;
+  optional string description = 2;
+  optional SubStream stream = 3;
+  optional string title = 4;
+  optional string subtitle = 5;
+}
+
+message CertificateSet {
+  optional string certificate_hash = 1;
+  optional string sha256 = 2;
+}
+
+message Dependencies {
+  optional int32 unknown = 1;
+  optional int64 size = 2;
+  repeated Dependency dependency = 3;
+  optional int32 target_sdk = 4;
+  optional int32  unknown2 = 5;
+  repeated string split_apks = 11;
+  repeated LibraryDependency library_dependency = 13;
+}
+
+message Dependency {
+  optional string package_name = 1;
+  optional int32 version = 2;
+  optional int32 unknown4 = 4;
+}
+
+message LibraryDependency {
+  optional string package_name = 1;
+  optional int64 version_code = 2;
+}
+
+
+message TestingProgramInfo {
+  optional bool subscribed = 2;
+  optional bool subscribed_and_installed = 3;
+  optional string email = 5;
+  optional string display_name = 7;
+  optional Image image = 6;
+}
+
+message EarlyAccessInfo {
+  optional string email = 3;
+}
+
+message DocumentDetails {
+  optional AppDetails app_details = 1;
+  optional SubscriptionDetails subscription_details = 7;
+}
+
+message PatchDetails {
+  optional int32 base_version_code = 1;
+  optional int64 size = 2;
+}
+
+message FileMetadata {
+  optional int32 file_type = 1;
+  optional int32 version_code = 2;
+  optional int64 size = 3;
+  optional string split_id = 4;
+  optional int64 compressed_size = 5;
+  repeated PatchDetails patch_details = 6;
+}
+
+message SubscriptionDetails {
+  optional int32 subscription_period = 1;
+}
+
+message Bucket {
+  optional bool multi_corpus = 2;
+  optional string title = 3;
+  optional string icon_url = 4;
+  optional string full_contents_url = 5;
+  optional double relevance = 6;
+  optional int64 estimated_results = 7;
+  optional string analytics_cookie = 8;
+  optional string full_contents_list_url = 9;
+  optional string next_page_url = 10;
+  optional bool ordered = 11;
+}
+
+message ListResponse {
+  repeated Bucket bucket = 1;
+  optional Item item = 2;
+}
+
+message Item {
+  optional string id = 1;
+  optional string sub_id = 2;
+  optional int32 type = 3;
+  optional int32 category_id = 4;
+  optional string title = 5;
+  optional string creator = 6;
+  optional string description_html = 7;
+  repeated Offer offer = 8;
+  optional Availability availability = 9;
+  repeated Image image = 10;
+  repeated Item sub_item = 11;
+  optional ContainerMetadata container_metadata = 12;
+  optional DocumentDetails details = 13;
+  optional AggregateRating aggregate_rating = 14;
+  optional Annotations annotations = 15;
+  optional string details_url = 16;
+  optional string share_url = 17;
+  optional string reviews_url = 18;
+  optional string backend_url = 19;
+  optional string purchase_details_url = 20;
+  optional bool details_reusable = 21;
+  optional string subtitle = 22;
+  optional string translated_description_html = 23;
+  optional bytes server_logs_cookie = 24;
+  optional AppInfo app_info = 25;
+  optional bool mature = 26;
+  optional string promotional_description = 27;
+  optional bool available_for_preregistration = 29;
+  repeated ReviewTip tip = 30;
+  optional string review_snippets_url = 31;
+  optional bool force_shareability = 32;
+  optional bool use_wishlist_as_primary_action = 33;
+  optional string review_questions_url = 34;
+  optional string review_summary_url = 39;
+  optional ContentRating content_rating = 50;
+}
+
+message ContentRating {
+  message ContentRatingImage {
+    message Dimension {
+      optional int32 width = 3;
+      optional int32 height = 4;
+    }
+    message Image {
+      optional string url = 1;
+    }
+    optional Dimension dimension = 3;
+    optional Image image = 6;
+  }
+  optional string title = 1;
+  optional string recommendation_and_description_html = 2;
+  optional ContentRatingImage content_rating_image = 3;
+  optional string recommendation = 5;
+  optional string description = 6;
+}
+
+message AppInfo {
+  optional string title = 1;
+  repeated AppInfoSection section = 2;
+}
+
+message AppInfoSection {
+  optional string label = 1;
+  optional AppInfoContainer container = 3;
+}
+
+message AppInfoContainer {
+  optional Image image = 1;
+  optional string description = 2;
+}
+
+message Annotations {
+  optional SectionMetaData section_related = 1;
+  optional SectionMetaData section_more_by = 2;
+  repeated Warning warning = 4;
+  optional SectionMetaData section_body_of_work = 5;
+  optional SectionMetaData section_core_content = 6;
+  optional OverlayMetaData overlay_meta_data = 7;
+  repeated Badge badge_for_creator = 8;
+  repeated Badge info_badge = 9;
+  optional AnnotationLink annotation_link = 10;
+  optional SectionMetaData section_cross_sell = 11;
+  optional SectionMetaData section_related_item_type = 12;
+  repeated PromotedDoc promoted_doc = 13;
+  optional string offer_note = 14;
+  optional string privacy_policy_url = 18;
+  optional SuggestionReasons suggestion_reasons = 19;
+  optional Warning optimal_device_class_warning = 20;
+  optional BadgeContainer badge_container = 21;
+  optional SectionMetaData section_suggest_for_rating = 22;
+  optional SectionMetaData section_purchase_cross_sell = 24;
+  repeated OverflowLink overflow_link = 25;
+  optional string attribution_html = 27;
+  optional PurchaseHistoryDetails purchase_history_details = 28;
+  optional Badge badge_for_legacy_rating = 29;
+  repeated VoucherInfo voucher_info = 30;
+  optional SectionMetaData section_featured_apps = 32;
+  repeated SectionMetaData details_page_cluster = 34;
+  optional VideoAnnotations video_annotations = 35;
+  optional SectionMetaData section_purchase_related_topics = 36;
+  optional MySubscriptionDetails my_subscription_details = 37;
+  optional MyRewardDetails my_reward_details = 38;
+  repeated Badge feature_badge = 39;
+  optional Snippet snippet = 42;
+  optional string downloads_label = 48;
+  optional Badge badge_for_rating = 50;
+  optional CategoryInfo category_info = 53;
+  optional EditorReason reasons = 60;
+  optional Stream top_chart_stream = 65;
+  optional string category_name = 66;
+  repeated Chip chip = 71;
+  repeated Badge display_badge = 72;
+  optional string live_stream_url = 80;
+  optional string promotion_stream_url = 85;
+  optional OverlayMetaData overlay_meta_data_extra = 91;
+  optional SectionImage section_image = 94;
+  optional SubStream category_stream = 97;
+}
+
+message EditorReason {
+  repeated string bulletin = 1;
+  optional string description = 2;
+}
+
+message SectionMetaData {
+  optional string header = 1;
+  optional string list_url = 2;
+  optional string browse_url = 3;
+  optional string description = 4;
+}
+
+message OverlayMetaData{
+  optional OverlayHeader overlay_header = 1;
+  optional OverlayTitle overlay_title = 181;
+  optional OverlayDescription overlay_description = 182;
+}
+
+message OverlayHeader{
+
+}
+
+message OverlayTitle{
+  optional string title = 1;
+  optional CompositeImage composite_image = 3;
+}
+
+message CompositeImage{
+  optional int32 type = 1;
+  optional string url = 5;
+  optional int32 type_alt = 9;
+  optional string title = 24;
+  optional string url_alt = 28;
+}
+
+message OverlayDescription{
+  optional string description = 2;
+}
+
+message SuggestionReasons {
+  repeated Reason reason = 2;
+  optional Dismissal neutral_dismissal = 4;
+  optional Dismissal positive_dismissal = 5;
+}
+
+message Reason {
+  optional string description_html = 3;
+  optional ReasonPlusOne reason_plus_one = 4;
+  optional ReasonReview reason_review = 5;
+  optional Dismissal dismissal = 7;
+  optional ReasonUserAction reason_user_action = 9;
+}
+
+message ReasonPlusOne {
+  optional string localized_description_html = 1;
+  repeated UserProfile user_profile = 3;
+}
+
+message ReasonReview {
+  optional Review review = 1;
+}
+
+message ReasonUserAction {
+  optional UserProfile user_profile = 1;
+  optional string localized_description_html = 2;
+}
+
+message Dismissal {
+  optional string url = 1;
+  optional string description_html = 2;
+}
+
+message Snippet {
+  optional string snippet_html = 1;
+}
+
+message MyRewardDetails {
+  optional int64 expiration_time_millis = 1;
+  optional string expiration_description = 2;
+  optional string button_label = 3;
+  optional Link link_action = 4;
+}
+
+message MySubscriptionDetails {
+  optional string subscription_status_html = 1;
+  optional string title = 2;
+  optional string title_by_line_html = 3;
+  optional string formatted_price = 4;
+  optional string price_by_line_html = 5;
+  optional bool cancel_subscription = 6;
+  optional Link payment_declined_learn_more_link = 7;
+  optional bool in_trial_period = 8;
+  optional Image title_by_line_icon = 9;
+}
+
+message VideoAnnotations {
+  optional bool bundle = 1;
+  optional string bundle_content_list_url = 2;
+  optional string extras_content_list_url = 3;
+  optional string also_available_in_list_url = 4;
+  repeated DocId bundle_doc_id = 5;
+}
+
+message VoucherInfo {
+  optional Item item = 1;
+  repeated Offer offer = 2;
+}
+
+message BadgeContainer {
+  optional string title = 1;
+  repeated Image image = 2;
+  repeated Badge badge = 3;
+}
+
+message OverflowLink {
+  optional string title = 1;
+  optional Link link = 2;
+}
+
+message PromotedDoc {
+  optional string title = 1;
+  optional string subtitle = 2;
+  repeated Image image = 3;
+  optional string description = 4;
+  optional string details_url = 5;
+}
+
+message Warning {
+  optional string localized_message = 1;
+}
+
+message AnnotationLink {
+  optional string uri = 1;
+  optional ResolvedLink resolved_link = 2;
+  optional int32 uri_backend = 3;
+}
+
+message Rated {
+  optional string label = 1;
+  optional Image image = 2;
+  optional string learn_more_html_link = 4;
+}
+
+message Badge {
+  optional string major = 1;
+  optional Image image = 2;
+  optional string minor = 3;
+  optional string minor_html = 4;
+  optional SubBadge sub_badge = 6;
+  optional StreamLink link = 7;
+  optional string description = 8;
+  optional SubStream stream = 12;
+}
+
+message SubBadge {
+  optional Image image = 1;
+  optional string description = 4;
+  optional StreamLink link = 5;
+}
+
+message Stream{
+  optional string title = 1;
+  optional SubStream stream = 2;
+  optional string subtitle = 3;
+  optional string browse_url = 83;
+}
+
+message SubStream{
+  optional StreamLink link = 2;
+}
+
+message Link {
+  optional string uri = 1;
+  optional ResolvedLink resolved_link = 2;
+  optional int32 uri_backend = 3;
+}
+
+message StreamLink{
+  optional string url = 1;
+  optional string stream_url = 2;
+  optional string search_url = 3;
+  optional string sub_category_url = 5;
+  optional string search_query = 11;
+}
+
+message Chip{
+  optional string title = 1;
+  optional SubStream stream = 2;
+}
+
+message CategoryInfo {
+  optional string category = 1;
+  optional string app_category = 2;
+}
+
+message EncryptedSubscriberInfo {
+  optional string data = 1;
+  optional string encrypted_key = 2;
+  optional string signature = 3;
+  optional string init_vector = 4;
+  optional int32 google_key_version = 5;
+  optional int32 carrier_key_version = 6;
+}
+
+message Availability {
+  optional int32 restriction = 5;
+  optional int32 offer_type = 6;
+  optional Rule rule = 7;
+  repeated group PerDeviceAvailabilityRestriction = 9 {
+    optional fixed64 android_id = 10;
+    optional int32 device_restriction = 11;
+    optional int64 channel_id = 12;
+    optional FilterEvaluationInfo filter_info = 15;
+  }
+  optional bool available_if_owned = 13;
+  repeated Install install = 14;
+  optional FilterEvaluationInfo filter_info = 16;
+  optional OwnershipInfo ownership_info = 17;
+  repeated AvailabilityProblem availability_problem = 18;
+  optional bool hidden = 21;
+}
+
+message AvailabilityProblem {
+  optional int32 problem_type = 1;
+  repeated string missing_value = 2;
+}
+
+message FilterEvaluationInfo {
+  repeated RuleEvaluation rule_evaluation = 1;
+}
+
+message Rule {
+  optional bool negate = 1;
+  optional int32 operator = 2;
+  optional int32 key = 3;
+  repeated string string_arg = 4;
+  repeated int64 long_arg = 5;
+  repeated double double_arg = 6;
+  repeated Rule sub_rule = 7;
+  optional int32 response_code = 8;
+  optional string comment = 9;
+  repeated fixed64 string_arg_hash = 10;
+  repeated int32 const_arg = 11;
+  optional int32 availability_problem_type = 12;
+  optional bool include_missing_values = 13;
+}
+
+message RuleEvaluation {
+  optional Rule rule = 1;
+  repeated string actual_string_value = 2;
+  repeated int64 actual_long_value = 3;
+  repeated bool actual_bool_value = 4;
+  repeated double actual_double_value = 5;
+}
+
+message LibraryAppDetails {
+  optional string certificate_hash = 2;
+  optional int64 refund_timeout_timestamp = 3;
+  optional int64 post_delivery_refund_window_millis = 4;
+}
+
+message LibraryInAppDetails {
+  optional string signed_purchase_data = 1;
+  optional string signature = 2;
+}
+
+message LibraryMutation {
+  optional DocId doc_id = 1;
+  optional int32 offer_type = 2;
+  optional int64 document_hash = 3;
+  optional bool deleted = 4;
+  optional LibraryAppDetails app_details = 5;
+  optional LibrarySubscriptionDetails subscription_details = 6;
+  optional LibraryInAppDetails in_app_details = 7;
+}
+
+message LibrarySubscriptionDetails {
+  optional int64 initiation_timestamp = 1;
+  optional int64 valid_until_timestamp = 2;
+  optional bool auto_renewing = 3;
+  optional int64 trial_until_timestamp = 4;
+  optional string signed_purchase_data = 5;
+  optional string signature = 6;
+}
+
+message LibraryUpdate {
+  optional int32 status = 1;
+  optional int32 corpus = 2;
+  optional bytes server_token = 3;
+  repeated LibraryMutation mutation = 4;
+  optional bool has_more = 5;
+  optional string library_id = 6;
+}
+
+message AndroidAppNotificationData {
+  optional int32 version_code = 1;
+  optional string asset_id = 2;
+}
+
+message InAppNotificationData {
+  optional string checkout_order_id = 1;
+  optional string in_app_notification_id = 2;
+}
+
+message LibraryDirtyData {
+  optional int32 backend = 1;
+  optional string library_id = 2;
+}
+
+message Notification {
+  optional int32 notification_type = 1;
+  optional int64 timestamp = 3;
+  optional DocId doc_id = 4;
+  optional string doc_title = 5;
+  optional string user_email = 6;
+  optional AndroidAppNotificationData app_data = 7;
+  optional AndroidAppDeliveryData app_delivery_data = 8;
+  optional PurchaseRemovalData purchase_removal_data = 9;
+  optional UserNotificationData user_notification_data = 10;
+  optional InAppNotificationData in_app_notification_data = 11;
+  optional PurchaseDeclinedData purchase_declined_data = 12;
+  optional string notification_id = 13;
+  optional LibraryUpdate library_update = 14;
+  optional LibraryDirtyData library_dirty_data = 15;
+}
+
+message PurchaseDeclinedData {
+  optional int32 reason = 1;
+  optional bool show_notification = 2;
+}
+
+message PurchaseRemovalData {
+  optional bool malicious = 1;
+}
+
+message UserNotificationData {
+  optional string notification_title = 1;
+  optional string notification_text = 2;
+  optional string ticker_text = 3;
+  optional string dialog_title = 4;
+  optional string dialog_text = 5;
+}
+
+message AggregateRating {
+  optional int32 type = 1[default = 1];
+  optional float star_rating = 2;
+  optional uint64 ratings_count = 3;
+  optional uint64 one_star_ratings = 4;
+  optional uint64 two_star_ratings = 5;
+  optional uint64 three_star_ratings = 6;
+  optional uint64 four_star_ratings = 7;
+  optional uint64 five_star_ratings = 8;
+  optional uint64 thumbs_up_count = 9;
+  optional uint64 thumbs_down_count = 10;
+  optional uint64 comment_count = 11;
+  optional double bayesian_mean_rating = 12;
+  repeated Tip tip = 13;
+  optional string rating_label = 17;
+  optional string rating_count_label_abbreviated = 18;
+  optional string rating_count_label = 19;
+}
+
+message Tip {
+  optional string tip_id = 1;
+  optional string text = 2;
+  optional int32 polarity = 3;
+  optional int64 review_count = 4;
+  optional string language = 5;
+  repeated string snippet_review_id = 6;
+}
+
+message ReviewTip {
+  optional string tip_url = 1;
+  optional string text = 2;
+  optional int32 polarity = 3;
+  optional int64 review_count = 4;
+}
+
+message AcceptTosResponse {
+}
+
+message CarrierBillingConfig {
+  optional string id = 1;
+  optional string name = 2;
+  optional int32 api_version = 3;
+  optional string provisioning_url = 4;
+  optional string credentials_url = 5;
+  optional bool tos_required = 6;
+  optional bool per_transaction_credentials_required = 7;
+  optional bool send_subscriber_id_with_carrier_billing_requests = 8;
+}
+
+message BillingConfig {
+  optional CarrierBillingConfig carrier_billing_config = 1;
+  optional int32 max_iab_api_version = 2;
+}
+
+message CorpusMetadata {
+  optional int32 backend = 1;
+  optional string name = 2;
+  optional string landing_url = 3;
+  optional string library_name = 4;
+  optional string recs_widget_url = 6;
+  optional string shop_name = 7;
+}
+
+message Experiments {
+  repeated string experiment_id = 1;
+}
+
+message SelfUpdateConfig {
+  optional int32 latest_client_version_code = 1;
+}
+
+message TocResponse {
+  repeated CorpusMetadata corpus = 1;
+  optional int32 tos_version_deprecated = 2;
+  optional string tos_content = 3;
+  optional string home_url = 4;
+  optional Experiments experiments = 5;
+  optional string tos_checkbox_text_marketing_emails = 6;
+  optional string tos_token = 7;
+  optional UserSettings user_settings = 8;
+  optional string icon_override_url = 9;
+  optional SelfUpdateConfig self_update_config = 10;
+  optional bool requires_upload_device_config = 11;
+  optional BillingConfig billing_config = 12;
+  optional string recs_widget_url = 13;
+  optional string social_home_url = 15;
+  optional bool age_verification_required = 16;
+  optional bool g_plus_signup_enabled = 17;
+  optional bool redeem_enabled = 18;
+  optional string help_url = 19;
+  optional int32 theme_id = 20;
+  optional string entertainment_home_url = 21;
+  optional string cookie = 22;
+}
+
+message UserSettings {
+  optional bool tos_checkbox_marketing_emails_opted_in = 1;
+  optional PrivacySetting privacy_setting = 2;
+}
+
+message PrivacySetting {
+  optional int32 type = 1;
+  optional int32 current_status = 2;
+  optional bool enabled_by_default = 3;
+}
+
+message Payload {
+  optional ListResponse list_response = 1;
+  optional DetailsResponse details_response = 2;
+  optional ReviewResponse review_response = 3;
+  optional BuyResponse buy_response = 4;
+  optional SearchResponse search_response = 5;
+  optional TocResponse toc_response = 6;
+  optional BrowseResponse browse_response = 7;
+  optional PurchaseStatusResponse purchase_status_response = 8;
+  optional string log_response = 10;
+  optional string flag_content_response = 13;
+  optional BulkDetailsResponse bulk_details_response = 19;
+  optional DeliveryResponse delivery_response = 21;
+  optional AcceptTosResponse accept_tos_response = 22;
+  optional CheckPromoOfferResponse check_promo_offer_response = 24;
+  optional InstrumentSetupInfoResponse instrument_setup_info_response = 25;
+  optional AndroidCheckinResponse android_checkin_response = 26;
+  optional UploadDeviceConfigResponse upload_device_config_response = 28;
+  optional SearchSuggestResponse search_suggest_response = 40;
+  optional ConsumePurchaseResponse consume_purchase_response = 30;
+  optional BillingProfileResponse billing_profile_response = 31;
+  optional DebugSettingsResponse debug_settings_response = 34;
+  optional CheckIabPromoResponse check_iab_promo_response = 35;
+  optional UserActivitySettingsResponse user_activity_settings_response = 36;
+  optional RecordUserActivityResponse record_user_activity_response = 37;
+  optional RedeemCodeResponse redeem_code_response = 38;
+  optional SelfUpdateResponse self_update_response = 39;
+  optional GetInitialInstrumentFlowStateResponse get_initial_instrument_flow_state_response = 41;
+  optional CreateInstrumentResponse create_instrument_response = 42;
+  optional ChallengeResponse challenge_response = 43;
+  optional BackDeviceChoicesResponse back_device_choices_response = 44;
+  optional BackupDocumentChoicesResponse backup_document_choices_response = 45;
+  optional EarlyUpdateResponse early_update_response = 46;
+  optional PreloadsResponse preloads_response = 47;
+  optional MyAccountsResponse my_accounts_response = 48;
+  optional ContentFilterResponse content_filter_response = 49;
+  optional ExperimentsResponse experiments_response = 50;
+  optional SurveyResponse survey_response = 51;
+  optional PingResponse ping_response = 52;
+  optional UpdateUserSettingResponse update_user_setting_response = 53;
+  optional GetUserSettingsResponse get_user_settings_response = 54;
+  optional GetSharingSettingsResponse get_sharing_settings_response = 56;
+  optional UpdateSharingSettingsResponse update_sharing_settings_response = 57;
+  optional ReviewSnippetsResponse review_snippets_response = 58;
+  optional DocumentSharingStateResponse document_sharing_state_response = 59;
+  optional ModuleDeliveryResponse module_delivery_response = 70;
+  optional TestingProgramResponse testing_program_response = 80;
+  optional ReviewResponse review_summary_response = 129;
+}
+
+message CheckIabPromoResponse {
+}
+
+message UserActivitySettingsResponse {
+}
+
+message RecordUserActivityResponse {
+}
+
+message RedeemCodeResponse {
+}
+
+message SelfUpdateResponse {
+}
+
+message GetInitialInstrumentFlowStateResponse {
+}
+
+message CreateInstrumentResponse {
+}
+
+message ChallengeResponse {
+}
+
+message BackDeviceChoicesResponse {
+}
+
+message BackupDocumentChoicesResponse {
+}
+
+message EarlyUpdateResponse {
+}
+
+message PreloadsResponse {
+  optional Preload config_preload = 1;
+  message Preload {
+    optional DocId doc_id = 1;
+    optional int32 version_code = 2;
+    optional string title = 3;
+    optional Image icon = 4;
+    optional string delivery_token = 5;
+    optional int32 install_location = 6;
+    optional int64 size = 7;
+  }
+  repeated Preload app_preload = 2;
+}
+
+message MyAccountsResponse {
+}
+
+message ContentFilterResponse {
+}
+
+message ExperimentsResponse {
+}
+
+message SurveyResponse {
+}
+
+message PingResponse {
+}
+
+message UpdateUserSettingResponse {
+}
+
+message GetUserSettingsResponse {
+}
+
+message GetSharingSettingsResponse {
+}
+
+message UpdateSharingSettingsResponse {
+}
+
+message ReviewSnippetsResponse {
+}
+
+message DocumentSharingStateResponse {
+}
+
+message ModuleDeliveryResponse {
+}
+
+message PreFetch {
+  optional string url = 1;
+  optional ResponseWrapper response = 2;
+  optional string etag = 3;
+  optional int64 ttl = 4;
+  optional int64 soft_ttl = 5;
+}
+
+message ServerMetadata {
+  optional int64 latency_millis = 1;
+}
+
+message Targets {
+  repeated int64 target_id = 1;
+  optional bytes signature = 2;
+}
+
+message ServerCookie {
+  optional int32 type = 1;
+  optional bytes token = 2;
+}
+
+message ServerCookies {
+  repeated ServerCookie server_cookie = 1;
+}
+
+message ResponseWrapper {
+  optional Payload payload = 1;
+  optional ServerCommands commands = 2;
+  optional PreFetch pre_fetch = 3;
+  repeated Notification notification = 4;
+  optional ServerMetadata server_metadata = 5;
+  optional Targets targets = 6;
+  optional ServerCookies server_cookies = 7;
+  optional bytes server_logs_cookie = 9;
+}
+
+message ResponseWrapperApi {
+  optional PayloadApi payload = 1;
+}
+
+message PayloadApi {
+  optional UserProfileResponse user_profile_response = 5;
+}
+
+message UserProfileResponse {
+  optional UserProfile user_profile = 1;
+}
+
+message ServerCommands {
+  optional bool clear_cache = 1;
+  optional string display_error_message = 2;
+  optional string log_error_stacktrace = 3;
+}
+
+message GetReviewsResponse {
+  repeated Review review = 1;
+  optional int64 matching_count = 2;
+}
+
+message Review {
+  optional string author_name = 1;
+  optional bytes url = 2;
+  optional string source = 3;
+  optional string version = 4;
+  optional int64 timestamp = 5;
+  optional int32 star_rating = 6;
+  optional string title = 7;
+  optional string comment = 8;
+  optional string comment_id = 9;
+  optional string device_name = 19;
+  optional string reply_text = 29;
+  optional int64 reply_time_stamp = 30;
+  optional ReviewAuthor author = 31;
+  optional UserProfile user_profile = 33;
+  optional Image sentiment = 34;
+  optional int32 helpful_count = 35;
+  optional int64 thumbs_up_count = 38;
+}
+
+message CriticReviewsResponse {
+  optional string title = 1;
+  optional Image image = 2;
+  optional uint32 total_num_reviews = 3;
+  optional uint32 percent_favorable = 4;
+  optional string source_text = 5;
+  optional Link source = 6;
+  repeated Review review = 7;
+}
+
+message ReviewAuthor {
+  optional string name = 2;
+  optional Image avatar = 5;
+}
+
+message UserProfile {
+  optional string profile_id = 1;
+  optional string person_id = 2;
+  optional int32 profile_type = 3;
+  optional int32 person_type = 4;
+  optional string name = 5;
+  repeated Image image = 10;
+  optional string profile_url = 19;
+  optional string profile_description = 22;
+}
+
+message ReviewResponse {
+  optional GetReviewsResponse user_reviews_response = 1;
+  optional string next_page_url = 2;
+  optional Review user_review = 3;
+  optional string suggestions_list_url = 4;
+  optional CriticReviewsResponse critic_reviews_response = 5;
+}
+
+message RelatedSearch {
+  optional string search_url = 1;
+  optional string header = 2;
+  optional int32 backend_id = 3;
+  optional int32 doc_type = 4[default = 1];
+  optional bool current = 5;
+}
+
+message SearchResponse {
+  optional string original_query = 1;
+  optional string suggested_query = 2;
+  optional bool aggregate_query = 3;
+  repeated Bucket bucket = 4;
+  repeated Item item = 5;
+  repeated RelatedSearch related_search = 6;
+  optional bytes server_logs_cookie = 7;
+  optional bool full_page_replaced = 8;
+  optional bool contains_snow = 9;
+  optional string next_page_url = 10;
+}
+
+message SearchSuggestResponse {
+  repeated SearchSuggestEntry entry = 1;
+}
+
+message SearchSuggestEntry {
+  optional int32 type = 1;
+  optional string suggested_query = 2;
+  optional ImageContainer image_container = 5;
+  message ImageContainer {
+    optional string image_url = 5;
+  }
+  optional string title = 6;
+  optional PackageNameContainer package_name_container = 8;
+  message PackageNameContainer {
+    optional string package_name = 1;
+  }
+}
+
+message TestingProgramResponse {
+  optional TestingProgramResult result = 2;
+}
+
+message TestingProgramResult {
+  optional TestingProgramDetails details = 4;
+}
+
+message TestingProgramDetails {
+  optional bool subscribed = 2;
+  optional int64 id = 3;
+  optional bool unsubscribed = 4;
+}
+
+message LogRequest {
+  optional int64 timestamp = 1;
+  optional string download_confirmation_query = 2;
+}
+
+message TestingProgramRequest {
+  optional string package_name = 1;
+  optional bool subscribe = 2;
+}
+
+message UploadDeviceConfigRequest {
+  optional DeviceConfigurationProto device_configuration = 1;
+  optional string manufacturer = 2;
+  optional string gcm_registration_id = 3;
+}
+
+message UploadDeviceConfigResponse {
+  optional string upload_device_config_token = 1;
+}
+
+message AndroidCheckinRequest {
+  optional string imei = 1;
+  optional int64 id = 2[default = 0];
+  optional string digest = 3;
+  optional AndroidCheckinProto checkin = 4;
+  optional string desired_build = 5;
+  optional string locale = 6;
+  optional int64 logging_id = 7;
+  optional string market_checkin = 8;
+  repeated string mac_addr = 9;
+  optional string meid = 10;
+  repeated string account_cookie = 11;
+  optional string time_zone = 12;
+  optional fixed64 security_token = 13;
+  optional int32 version = 14;
+  repeated string ota_cert = 15;
+  optional string serial_number = 16;
+  optional string esn = 17;
+  optional DeviceConfigurationProto device_configuration = 18;
+  repeated string mac_addr_type = 19;
+  optional int32 fragment = 20;
+  optional string user_name = 21;
+  optional int32 user_serial_number = 22;
+}
+
+message AndroidCheckinResponse {
+  optional bool stats_ok = 1;
+  repeated AndroidIntentProto intent = 2;
+  optional int64 time_msec = 3;
+  optional string digest = 4;
+  repeated GservicesSetting setting = 5;
+  optional bool market_ok = 6;
+  optional fixed64 android_id = 7;
+  optional fixed64 security_token = 8;
+  optional bool settings_diff = 9;
+  repeated string delete_setting = 10;
+  optional string device_checkin_consistency_token = 12;
+}
+
+message GservicesSetting {
+  optional bytes name = 1;
+  optional bytes value = 2;
+}
+
+message AndroidBuildProto {
+  optional string id = 1;
+  optional string product = 2;
+  optional string carrier = 3;
+  optional string radio = 4;
+  optional string bootloader = 5;
+  optional string client = 6;
+  optional int64 timestamp = 7;
+  optional int32 google_services = 8;
+  optional string device = 9;
+  optional int32 sdk_version = 10;
+  optional string model = 11;
+  optional string manufacturer = 12;
+  optional string build_product = 13;
+  optional bool ota_installed = 14;
+}
+
+message AndroidCheckinProto {
+  optional AndroidBuildProto build = 1;
+  optional int64 last_checkin_msec = 2;
+  repeated AndroidEventProto event = 3;
+  repeated AndroidStatisticProto stat = 4;
+  repeated string requested_group = 5;
+  optional string cell_operator = 6;
+  optional string sim_operator = 7;
+  optional string roaming = 8;
+  optional int32 user_number = 9;
+}
+
+message AndroidEventProto {
+  optional string tag = 1;
+  optional string value = 2;
+  optional int64 time_msec = 3;
+}
+
+message AndroidIntentProto {
+  optional string action = 1;
+  optional string data_uri = 2;
+  optional string mime_type = 3;
+  optional string java_class = 4;
+  repeated group Extra = 5 {
+    optional string name = 6;
+    optional string value = 7;
+  }
+}
+
+message AndroidStatisticProto {
+  optional string tag = 1;
+  optional int32 count = 2;
+  optional float sum = 3;
+}
+
+message ClientLibraryState {
+  optional int32 corpus = 1;
+  optional bytes server_token = 2;
+  optional int64 hash_code_sum = 3;
+  optional int32 library_size = 4;
+  optional string library_id = 5;
+}
+
+message AndroidDataUsageProto {
+  optional int32 version = 1;
+  optional int64 current_report_msec = 2;
+  repeated KeyToPackageNameMapping key_to_package_name_mapping = 3;
+  repeated PayloadLevelAppStat payload_level_app_stat = 4;
+  repeated IpLayerNetworkStat ip_layer_network_stat = 5;
+}
+
+message AndroidUsageStatsReport {
+  optional int64 android_id = 1;
+  optional int64 logging_id = 2;
+  optional UsageStatsExtensionProto usage_stats = 3;
+}
+
+message AppBucket {
+  optional int64 bucket_start_msec = 1;
+  optional int64 bucket_duration_msec = 2;
+  repeated StatCounters stat_counters = 3;
+  optional int64 operation_count = 4;
+}
+
+message CounterData {
+  optional int64 bytes = 1;
+  optional int64 packets = 2;
+}
+
+message IpLayerAppStat {
+  optional int32 package_key = 1;
+  optional int32 application_tag = 2;
+  repeated AppBucket ip_layer_app_bucket = 3;
+}
+
+message IpLayerNetworkBucket {
+  optional int64 bucket_start_msec = 1;
+  optional int64 bucket_duration_msec = 2;
+  repeated StatCounters stat_counters = 3;
+  optional int64 network_active_duration = 4;
+}
+
+message IpLayerNetworkStat {
+  optional string network_details = 1;
+  optional int32 type = 2;
+  repeated IpLayerNetworkBucket ip_layer_network_bucket = 3;
+  repeated IpLayerAppStat ip_layer_app_stat = 4;
+}
+
+message KeyToPackageNameMapping {
+  optional int32 package_key = 1;
+  optional string uid_name = 2;
+  repeated PackageInfo shared_package = 3;
+}
+
+message PackageInfo {
+  optional string pkg_name = 1;
+  optional int32 version_code = 2;
+}
+
+message PayloadLevelAppStat {
+  optional int32 package_key = 1;
+  optional int32 application_tag = 2;
+  repeated AppBucket payload_level_app_bucket = 3;
+}
+
+message StatCounters {
+  optional int32 network_proto = 1;
+  optional int32 direction = 2;
+  optional CounterData counter_data = 3;
+  optional int32 fg_bg = 4;
+}
+
+message UsageStatsExtensionProto {
+  optional AndroidDataUsageProto data_usage = 1;
+}
+
+message ModifyLibraryRequest {
+  optional string library_id = 1;
+  repeated string add_package_name = 2;
+  repeated string remove_package_name = 3;
+}
+
+message ServerResponse {
+  message Error {
+    optional string message = 2;
+  }
+  optional Error error = 2;
+}

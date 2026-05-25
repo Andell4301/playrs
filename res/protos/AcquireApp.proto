@@ -1,0 +1,133 @@
+/*
+ * SPDX-FileCopyrightText: 2025 Aurora OSS
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+syntax = "proto2";
+
+message AcquireRequest {
+    optional Package package = 1;
+    optional Field f8 = 8;
+    optional Version version = 12;
+    optional uint32 offer_type = 13;
+    optional uint32 f15 = 15;
+    optional string nonce = 22;
+    optional uint32 f25 = 25;
+    optional Message30 m30 = 30;
+
+    message Package {
+        optional Payload payload = 1;
+        optional uint32 f2 = 2;
+
+        message Payload {
+            optional string package_name = 1;
+            optional uint32 f2 = 2;
+            optional uint32 f3 = 3;
+        }
+    }
+
+    message Version {
+        optional uint64 version_code = 1;
+        optional uint32 f3 = 3;
+    }
+
+    message Message30 {
+        optional uint32 f1 = 1;
+        optional uint32 f2 = 2;
+    }
+}
+
+message AcquireResponseWrapper {
+    optional AcquireResponse acquire_response = 1;
+
+    message AcquireResponse {
+        optional AcquirePayload acquire_payload = 94;
+
+        message AcquirePayload {
+            optional PurchaseWrapper purchase = 3;
+            optional Package package = 4;
+
+            message PurchaseWrapper {
+                optional int32 status = 7;
+                optional Message8 m8 = 8;
+                optional string signature = 9;
+                optional Response response = 10;
+                oneof purchase_one_of {
+                    Purchase game_purchase = 12;
+                    Purchase app_purchase = 15;
+                }
+
+                message Purchase {
+                    optional string label = 1;
+                    optional Properties properties = 2;
+
+                    message Properties {
+                        repeated Entry entries = 1;
+                    }
+
+                    message Entry {
+                        optional string key = 1;
+                        oneof data_one_of {
+                            string bool_value = 2;
+                            int32 int_value = 4;
+                        }
+                    }
+                }
+
+                message Message8 {
+                    repeated SomeThing some_things = 1;
+                }
+
+                message SomeThing {
+                    optional int32 f1 = 1;
+                    optional int32 f2 = 2;
+                    optional Field f3 = 3;
+                    optional Field f4 = 4;
+                    optional string f6 = 6;
+                }
+            }
+
+            message Package {
+                optional OuterPayload payload = 1;
+
+                message OuterPayload {
+                    optional AppInfo app_info = 1;
+                    optional EncodedPayload encoded_payload = 2;
+                    optional InnerPayload sub_payload = 5;
+                }
+
+                message InnerPayload {
+                    optional AppInfo app_info = 1;
+                    optional EncodedPayload encoded_payload = 2;
+                    optional uint32 f5 = 5;
+                }
+
+                message AppInfo {
+                    optional string package_name = 1;
+                    optional uint64 seven = 2;
+                }
+
+                message EncodedPayload {
+                    optional string encoded = 1;
+                }
+            }
+        }
+
+        message Response {
+            optional int32 status = 1;
+            optional Payload payload = 2;
+
+            message Payload {
+                optional Data data = 1;
+
+                message Data {
+                    optional string key = 1;
+                    optional int32 value = 5;
+                }
+            }
+        }
+    }
+}
+
+message Field {
+}
