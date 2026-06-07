@@ -16,7 +16,6 @@ use prost::Message;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use tracing::{debug, info};
 
-
 #[derive(Debug, Clone, Default)]
 pub struct AuthData {
     pub(crate) email: Option<String>,
@@ -300,7 +299,6 @@ impl GooglePlayApi {
     }
 }
 
-
 impl GooglePlayApi {
     pub async fn setup(&mut self, force: bool) -> Result<(), PlayError> {
         info!("Setting up Google Play authentication...");
@@ -345,7 +343,7 @@ impl GooglePlayApi {
         // if let Some(cookie) = toc_response.cookie {
         //     self.auth_data.dfe_cookie = Some(cookie);
         // }
-        
+
         info!("Authenticated!");
         Ok(())
     }

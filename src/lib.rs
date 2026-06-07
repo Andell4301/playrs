@@ -17,7 +17,7 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use constants::{
     CategoryType, ClusterType, LEGACY_USER_AGENT, ModifyWishlistAction, PatchFormat, PlayFileType, ReviewFilter, StreamCategory, StreamType,
     URL_ACQUIRE, URL_BULK_DETAILS, URL_CATEGORIES, URL_DELIVERY, URL_DETAILS, URL_FDFE, URL_MODIFY_LIBRARY, URL_PURCHASE, URL_PURCHASE_HISTORY,
-    URL_REVIEWS, URL_SEARCH, URL_SEARCH_SUGGEST, URL_TESTING_PROGRAM, URL_TOP_CHART, URL_USER_PROFILE,
+    URL_REVIEW_ADD_EDIT, URL_REVIEW_DELETE, URL_REVIEWS, URL_SEARCH, URL_SEARCH_SUGGEST, URL_TESTING_PROGRAM, URL_TOP_CHART, URL_USER_PROFILE,
 };
 use device::Device;
 use error::PlayError;
@@ -361,7 +361,7 @@ impl GooglePlayApi {
             ("rst".to_owned(), "3".to_owned()),
             ("itpr".to_owned(), is_beta.to_string()),
         ]);
-        let response = self.post_play_wrapper_resp(URL_REVIEWS, headers, Some(params), None).await?;
+        let response = self.post_play_wrapper_resp(URL_REVIEW_ADD_EDIT, headers, Some(params), None).await?;
         let review_response = get_payload_field!(response, review_response)?;
         if let Some(user_reviews_response) = review_response.user_reviews_response {
             if let Some(review) = user_reviews_response.review.into_iter().next() {
@@ -369,6 +369,23 @@ impl GooglePlayApi {
             }
         }
         Err(PlayError::ReviewError)
+    }
+
+    pub async fn delete_review(&self, package_name: &str, is_beta: bool) -> Result<bool, PlayError> {
+        let headers = self.get_default_headers()?;
+        let params = IndexMap::from([("doc".to_owned(), package_name.to_owned()), ("itpr".to_owned(), is_beta.to_string())]);
+        let resp = self.post_play_wrapper_resp(URL_REVIEW_DELETE, headers, Some(params), None).await;
+        match resp {
+            Ok(_) => Ok(true),
+            Err(e) => Err(e),
+        }
+    }
+
+    pub async fn get_next_reviews(&self, next_page_url: &str) -> Result<ReviewResponse, PlayError> {
+        let headers = self.get_default_headers()?;
+        let url = format!("{URL_FDFE}/{next_page_url}");
+        let response = self.get_play_wrapper_resp(&url, headers, None).await?;
+        get_payload_field!(response, review_response)
     }
 
     pub async fn search_suggestions(&self, query: &str) -> Result<Vec<SearchSuggestEntry>, PlayError> {
@@ -737,7 +754,7 @@ impl GooglePlayApi {
             app_details.item.and_then(|item| item.details).and_then(|details| details.app_details).ok_or_else(|| PlayError::MissingAppDetails)?;
 
         let package_name = details.package_name.ok_or_else(|| PlayError::MissingFieldError("package_name".to_owned()))?;
-        let title = details.title.unwrap_or("".to_owned());  // TODO: consider - maybe this should fallback to package name. Always empty for APKs I've tested
+        let title = details.title.unwrap_or("".to_owned());
         let version_code = details.version_code.ok_or_else(|| PlayError::MissingFieldError("version_code".to_owned()))?;
         let target_sdk_version = details.target_sdk_version.ok_or_else(|| PlayError::MissingFieldError("target_sdk_version".to_owned()))?;
 

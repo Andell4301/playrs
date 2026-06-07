@@ -42,6 +42,7 @@ pub const URL_DETAILS: &str = concatcp!(URL_FDFE, "/details");
 pub const URL_DETAILS_DEVELOPER: &str = concatcp!(URL_FDFE, "/browseDeveloperPage");
 pub const URL_MY_APPS: &str = concatcp!(URL_FDFE, "/myApps");
 pub const URL_REVIEW_ADD_EDIT: &str = concatcp!(URL_FDFE, "/addReview");
+pub const URL_REVIEW_DELETE: &str = concatcp!(URL_FDFE, "/deleteReview");
 pub const URL_REVIEW_USER: &str = concatcp!(URL_FDFE, "/userReview");
 pub const URL_REVIEWS: &str = concatcp!(URL_FDFE, "/rev");
 pub const URL_SEARCH: &str = concatcp!(URL_FDFE, "/search");
