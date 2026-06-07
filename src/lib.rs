@@ -750,11 +750,11 @@ impl GooglePlayApi {
     }
 
     fn make_xapk_manifest(&self, app_details: DetailsResponse, files: Vec<PlayFile>, include_dex: bool) -> Result<Value, PlayError> {
-        let details =
-            app_details.item.and_then(|item| item.details).and_then(|details| details.app_details).ok_or_else(|| PlayError::MissingAppDetails)?;
+        let item = app_details.item.ok_or_else(|| PlayError::MissingFieldError("item".to_owned()))?;
+        let details = item.details.and_then(|details| details.app_details).ok_or_else(|| PlayError::MissingAppDetails)?;
 
         let package_name = details.package_name.ok_or_else(|| PlayError::MissingFieldError("package_name".to_owned()))?;
-        let title = details.title.unwrap_or("".to_owned());
+        let title = item.title.unwrap_or("".to_owned());
         let version_code = details.version_code.ok_or_else(|| PlayError::MissingFieldError("version_code".to_owned()))?;
         let target_sdk_version = details.target_sdk_version.ok_or_else(|| PlayError::MissingFieldError("target_sdk_version".to_owned()))?;
 
