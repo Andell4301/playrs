@@ -1,3 +1,5 @@
+// use thirtyfour = "0.35.0"
+
 use chromedriver_manager::{loglevel::LogLevel, manager::Handler};
 use serde_json::json;
 use std::net::TcpListener;
