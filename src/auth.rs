@@ -334,8 +334,14 @@ impl GooglePlayApi {
             self.auth_data.device_config_token = Some(token);
         }
 
-        let auth_token = self.generate_token(TokenService::GooglePlay).await?;
-        self.auth_data.auth_token = Some(auth_token);
+        match (&self.auth_data.aas_token, &self.auth_data.auth_token) {
+            (Some(_), _) => {
+                let auth_token = self.generate_token(TokenService::GooglePlay).await?;
+                self.auth_data.auth_token = Some(auth_token);
+            }
+            (None, Some(_)) => debug!("No AAS token, keeping the provided auth token"),
+            (None, None) => return Err(PlayError::AuthenticationError("Setup requires either an AAS token or an auth token".to_string())),
+        }
 
         // https://gitlab.com/AuroraOSS/gplayapi/-/commit/735ec0e00ce51b6934a673f17c906e07373a9a43
         // Skip accepting Google ToS because it adds device to Google account

@@ -176,6 +176,17 @@ impl GooglePlayApi {
         Ok(Self { device, auth_data, client: Client::new() })
     }
 
+    pub fn new_from_auth_token(
+        auth_token: impl Into<String>,
+        email: impl Into<String>,
+        device_name: Option<impl Into<String>>,
+        device_locale: Option<&str>,
+    ) -> Result<Self, PlayError> {
+        let device = Device::new(device_name, device_locale)?;
+        let auth_data = AuthData { auth_token: Some(auth_token.into()), email: Some(email.into()), ..Default::default() };
+        Ok(Self { device, auth_data, client: Client::new() })
+    }
+
     pub fn new_from_oauth_login_token(
         oauth_login_token: impl Into<String>,
         email: impl Into<String>,
