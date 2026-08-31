@@ -31,6 +31,7 @@ use playproto::{
     acquire_request::{Message30, Package, Version},
 };
 use prost::Message;
+pub use reqwest;
 use reqwest::{
     Client,
     header::{HeaderName, HeaderValue},
@@ -77,6 +78,11 @@ impl GooglePlayApi {
 
     pub fn get_auth_data(&self) -> &AuthData {
         &self.auth_data
+    }
+
+    pub fn with_client(mut self, client: Client) -> Self {
+        self.client = client;
+        self
     }
 }
 
