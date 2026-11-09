@@ -31,3 +31,9 @@ Without `RUST_LOG`, use `-v` for debug logs, `-vv` for trace logs, or `--quiet` 
 
 Playrs logs omit complete credential values and URL query strings. Sufficiently long, printable token fields in `AuthData` debug output show only a three-character prefix and suffix; short or non-printable tokens, emails, cookies, and IDs remain redacted.
 `auth-info` prints the complete GSF ID and auth token to stdout.
+
+## Streams and downloads
+
+For streams that return items and a node tree, use `get_stream_tree_response("getHomeStream?c=3")`. List methods return `ListResponse` and handle prefetched lists.
+
+Use `DownloadAppRequest` with `download_app_request` to configure downloads. The request builders accept the installed version, derived APK ID, frosting ID, and patch formats. `DeliveryRequest` supports the same options when requesting delivery metadata directly.

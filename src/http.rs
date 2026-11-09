@@ -24,14 +24,14 @@ macro_rules! get_payload_field {
 }
 pub(crate) use get_payload_field;
 
-pub(crate) struct FormResponse {
+pub(crate) struct AuthResponse {
     response: Response,
     route: String,
     started: Instant,
     request_id: u64,
 }
 
-impl FormResponse {
+impl AuthResponse {
     pub(crate) async fn bytes(self) -> Result<Vec<u8>, PlayError> {
         let status = self.response.status();
         let bytes = self.response.bytes().await.map_err(|error| PlayError::http_request("POST", self.route.clone(), error))?;
@@ -78,7 +78,7 @@ fn log_response(method: &'static str, route: &str, status: reqwest::StatusCode, 
 }
 
 impl GooglePlayApi {
-    pub(crate) async fn post_form(&self, url: &str, headers: HeaderMap, params: IndexMap<String, String>) -> Result<FormResponse, PlayError> {
+    pub(crate) async fn post_auth(&self, url: &str, headers: HeaderMap, params: IndexMap<String, String>) -> Result<AuthResponse, PlayError> {
         let method = "POST";
         let route = safe_route(url);
         let started = Instant::now();
@@ -89,7 +89,7 @@ impl GooglePlayApi {
             .client
             .post(url)
             .headers(headers)
-            .form(&params)
+            .query(&params)
             .send()
             .await
             .map_err(|error| PlayError::http_request(method, route.clone(), error))?;
@@ -102,10 +102,10 @@ impl GooglePlayApi {
             }
         };
 
-        Ok(FormResponse { response, route, started, request_id })
+        Ok(AuthResponse { response, route, started, request_id })
     }
 
-    pub(crate) fn parse_form_response(response: &[u8]) -> HashMap<String, String> {
+    pub(crate) fn parse_auth_response(response: &[u8]) -> HashMap<String, String> {
         let text = String::from_utf8_lossy(response);
         text.lines().filter_map(|line| line.split_once('=')).map(|(k, v)| (k.to_string(), v.to_string())).collect()
     }
@@ -128,7 +128,7 @@ impl GooglePlayApi {
 
         let builder = self.client.post(url).headers(headers);
         let builder = if let Some(body) = body { builder.body(body) } else { builder };
-        let builder = if let Some(params) = params { builder.form(&params) } else { builder };
+        let builder = if let Some(params) = params { builder.query(&params) } else { builder };
 
         let response = builder.send().await.map_err(|error| PlayError::http_request(method, route.clone(), error))?;
         let status = response.status();

@@ -200,6 +200,23 @@ pub enum PatchFormat {
     GzippedBsdiff = 3,
     Unknown4 = 4,
     Unknown5 = 5,
+    BrotliBsdiff = 6,
+    BrotliFilebyfileRecursive = 7,
+    BrotliFilebyfileAndroidAware = 8,
+    BrotliFilebyfileRecursiveAndroidAware = 9,
+    BrotliFilebyfileAndroidAwareNoRecompression = 10,
+    BrotliFilebyfileAndroidAwareV2 = 11,
+    BrotliFilebyfileRecursiveAndroidAwareV2 = 12,
+    BrotliFilebyfileAndroidAwareV2NoRecompression = 13,
+}
+
+impl PatchFormat {
+    /// Gzip-compressed file-by-file format, retained as `Unknown4` for compatibility.
+    #[allow(non_upper_case_globals)]
+    pub const GzippedFilebyfile: Self = Self::Unknown4;
+    /// Brotli-compressed file-by-file format, retained as `Unknown5` for compatibility.
+    #[allow(non_upper_case_globals)]
+    pub const BrotliFilebyfile: Self = Self::Unknown5;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Display)]

@@ -70,6 +70,8 @@ pub enum PlayError {
     PurchaseError(String),
     #[error("Failed to add or edit review")]
     ReviewError,
+    #[error("No downloadable files returned")]
+    EmptyDownloads,
 }
 
 impl PlayError {

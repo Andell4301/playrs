@@ -1,0 +1,1041 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Aurora OSS
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+syntax = "proto3";
+
+// Home and developer streams can carry items in field 11 and a node tree in
+// field 12 of the response envelope.
+
+message StreamResponse {
+  repeated ItemResponse.Item item = 11;
+  StreamTree tree = 12;
+}
+
+message StreamTree {
+  repeated StreamPage page = 1;
+  repeated StreamNode node = 2;
+}
+
+/* A page is addressed by the URL it was requested with; its children are the page's modules. */
+message StreamPage {
+  StreamPageKey key = 1;
+  StreamPageContent content = 2;
+}
+
+message StreamPageKey {
+  oneof key {
+    string url = 1;
+  }
+}
+
+message StreamPageContent {
+  StreamChildren children = 2;
+}
+
+/*
+ * next_page_token continues the list: Play re-requests the parent's own URL (a page's or a
+ * url-keyed node's) with the token appended as the ptkn query parameter.
+ */
+message StreamChildren {
+  repeated StreamNodeKey key = 1;
+  string next_page_token = 2;
+}
+
+/*
+ * Module nodes are keyed by their own streamNode URL; item nodes by an opaque id. A child whose
+ * key has no StreamNode in the same response is fetched lazily by the client.
+ */
+message StreamNodeKey {
+  oneof key {
+    string url = 1;
+    string id = 2;
+  }
+}
+
+message StreamNode {
+  StreamNodeKey key = 1;
+  StreamNodeContent content = 2;
+}
+
+message StreamNodeContent {
+  StreamElement element = 1;
+  StreamChildren children = 2;
+  StreamItemRef item = 3;
+}
+
+/* Joins an item node to its entry in StreamResponse.item, by the same docid. */
+message StreamItemRef {
+  StreamItemKey key = 1;
+}
+
+message StreamItemKey {
+  StringWrapper id = 1;
+}
+
+message StreamElement {
+  StreamModule module = 1;
+}
+
+// Known module layouts. Other module variants are not decoded by this schema.
+message StreamModule {
+  oneof module {
+    ClusterModule cluster = 2;
+    DeveloperHeaderModule developer_header = 46;
+    TextModule text = 62;
+  }
+}
+
+message ModuleHeader {
+  string title = 1;
+  string subtitle = 3;
+  ItemResponse.Image.Metadata image = 4;
+  ModuleLink link = 6;
+}
+
+/* An action; only the browse-stream variant carries a URL a client can fetch. */
+message ModuleLink {
+  oneof action {
+    StreamBrowseLink browse = 3;
+  }
+}
+
+message StreamBrowseLink {
+  string url = 1;
+}
+
+/* Carries its title and link twice: inline (1-3) and in the common header (6). */
+message ClusterModule {
+  string title = 1;
+  string subtitle = 2;
+  ModuleLink link = 3;
+  ModuleHeader header = 6;
+}
+
+message DeveloperHeaderModule {
+  string title = 1;
+  ItemResponse.Image.Metadata icon = 3;
+  oneof cover {
+    ItemResponse.Image.Metadata cover_image = 4;
+    CoverMedia cover_media = 5;
+  }
+}
+
+message CoverMedia {
+  ItemResponse.Image.Metadata image = 2;
+}
+
+message TextModule {
+  ModuleHeader header = 1;
+  oneof body {
+    string text = 3;
+    FormattedText formatted_text = 4;
+  }
+}
+
+message FormattedText {
+  string text = 2;
+}
+
+message ItemResponse {
+  message Image {
+    message Metadata {
+      message Dimensions {
+        int32 height = 1;
+        int32 width = 2;
+      }
+
+      message MetadataEntry {
+        message Color {
+          int32 R = 1;
+          int32 G = 2;
+          int32 B = 3;
+          int32 A = 4;
+        }
+
+        string url = 1;
+        Color primary_color = 2;
+      }
+
+      int32 unknown2 = 2;
+      Dimensions dimensions = 3;
+      MetadataEntry metadata = 6;
+    }
+
+    repeated Metadata metadata = 1;
+  }
+
+  message DeveloperInfo {
+    message Metadata {
+      string name = 1;
+      string support_email = 2;
+      string address = 3;
+      string phone = 4;
+    }
+
+    string email = 1;
+    string website = 2;
+    Metadata metadata = 5;
+  }
+
+  message SubItem {
+    string type = 1;
+    string name = 2;
+    string package_name = 3;
+    string action = 6;
+  }
+
+  message CertificateWrapper {
+    message CertificateSet {
+      string sha1 = 1;
+      string sha256 = 2;
+    }
+
+    repeated CertificateSet certificate_set = 1;
+  }
+
+  message ContentRating {
+    string title = 1;
+    string recommendation_and_description_html = 2;
+
+    Image.Metadata image = 3;
+    Image.Metadata image_alt = 4;
+    string recommendation = 5;
+    string description = 6;
+  }
+
+  message Price {
+    message OfferWrapper {
+      message Offer {
+        message OfferType {
+          int32 type = 1;
+        }
+
+        message Amount {
+          message Money {
+            int64 micros = 1;
+            string formatted_amount = 2;
+          }
+
+          Money money = 1;
+          int32 unknown3 = 3;
+        }
+
+        message BuyButton {
+          string label = 3;
+        }
+
+        message Note {
+          string text = 1;
+        }
+
+        OfferType offer_type = 1;
+        Amount amount = 2;
+        BuyButton buy_button = 3;
+        bool checkout_required = 4;
+        Note note = 11;
+      }
+
+      repeated Offer offer = 1;
+    }
+
+    OfferWrapper offer_wrapper = 1;
+  }
+
+  message Rating {
+    float star_rating = 1;
+    uint64 rating_count = 2;
+    uint64 rating_one_star = 3;
+    uint64 rating_two_star = 4;
+    uint64 rating_three_star = 5;
+    uint64 rating_four_star = 6;
+    uint64 rating_five_star = 7;
+    string rating_label = 8;
+    string rating_count_label_abbreviated = 10;
+    string rating_count_label = 11;
+  }
+
+  message Share {
+    message Target {
+      UrlWrapper play_store = 37;
+    }
+
+    Target target = 1;
+  }
+
+  message PrivacyPolicy {
+    message Target {
+      UrlWrapper policy = 36;
+    }
+
+    Target target = 1;
+  }
+
+  message FamilyBadge {
+    message Category {
+      UrlWrapper browse = 3;
+    }
+
+    message Link {
+      int32 age_bucket = 1;
+      Category category = 2;
+    }
+
+    string age_label = 1;
+    string age_label_long = 2;
+    string description = 3;
+    Image.Metadata image = 4;
+    int32 state = 5;
+    repeated Link links = 7;
+  }
+
+  // The details page's data-safety summary card: one row per headline (sharing, collection,
+  // encryption, deletion). The security-practices section is DataSafety.security.
+  message DataSafetySummary {
+    message Row {
+      message Html {
+        string html = 2;
+      }
+
+      string title = 2;
+      Html subtitle = 4;
+      Image.Metadata icon = 5;
+    }
+
+    repeated Row rows = 4;
+  }
+
+  message DataSafety {
+    message Html {
+      string html = 2;
+    }
+
+    message LearnMore {
+      UrlWrapper url = 36;
+    }
+
+    message Entry {
+      message Header {
+        message Summary {
+          string text = 2;
+        }
+
+        string name = 2;
+        Summary summary = 4;
+        Image.Metadata icon = 5;
+      }
+
+      message DataPoint {
+        string name = 1;
+
+        int32 optional = 2;
+
+        string purposes = 3;
+      }
+
+      Header header = 1;
+      repeated DataPoint data = 5;
+    }
+
+    message Section {
+      repeated Entry entries = 1;
+      string title = 2;
+      string subtitle = 3;
+      Image.Metadata icon = 6;
+      Html description = 7;
+    }
+
+    message Sections {
+      Section shared = 1;
+      Section collected = 2;
+    }
+
+    message Security {
+      message Practice {
+        string title = 2;
+        Html description = 4;
+        Image.Metadata icon = 5;
+      }
+
+      Image.Metadata icon = 1;
+      string title = 2;
+      repeated Practice practices = 3;
+    }
+
+    LearnMore learn_more = 3;
+    Sections sections = 5;
+    Security security = 10;
+  }
+
+  message FeaturedReviews {
+    message Review {
+      message Author {
+        Image.Metadata avatar = 7;
+        string name = 8;
+      }
+
+      message Reply {
+        string text = 1;
+        Timestamp timestamp = 2;
+      }
+
+      int32 star_rating = 1;
+      string comment = 3;
+      Timestamp timestamp = 4;
+
+      string review_url = 5;
+      Author author = 7;
+      Reply reply = 11;
+    }
+
+    repeated Review reviews = 1;
+  }
+
+  message ReviewTips {
+    message Tip {
+      message Id {
+        string id = 1;
+      }
+
+      Id id = 1;
+      string text = 2;
+      int32 polarity = 3;
+      string review_count_label = 4;
+    }
+
+    repeated Tip tips = 1;
+  }
+
+  message AppFeatures {
+    message Feature {
+      string title = 1;
+      string description = 2;
+    }
+
+    message Group {
+      string query = 1;
+      repeated Feature features = 2;
+    }
+
+    repeated Group groups = 1;
+  }
+
+  message OtherFormFactors {
+    message Surface {
+      message Browse {
+        UrlWrapper url = 3;
+      }
+
+      message Target {
+        Browse browse = 1;
+        string name = 2;
+        Image icon = 3;
+      }
+
+      int32 type = 1;
+      Target target = 4;
+    }
+
+    repeated Surface surfaces = 1;
+  }
+
+  message Category {
+    string name = 1;
+    StreamTagMetadata link = 2;
+    string id = 3;
+  }
+
+  message SignedIn {
+    uint32 value = 1;
+  }
+
+  message CommunityVideo {
+    message Media {
+      message Video {
+        string url = 1;
+        string id = 2;
+        bytes playback = 6;
+      }
+
+      Video video = 1;
+      Image.Metadata thumbnail = 2;
+    }
+
+    Media media = 1;
+    string title = 2;
+    string channel = 3;
+    uint64 views = 4;
+  }
+
+  message RegionalMetadata {
+    StringWrapper app_name = 1;
+    Image icon = 2;
+    Rating rating = 7;
+    StringWrapper description = 8;
+    Share share = 9;
+    Price price = 10;
+    UrlWrapper review_questions_url = 14;
+    FamilyBadge family_badge = 33;
+    FeaturedReviews featured_reviews = 38;
+    ReviewTips review_tips = 41;
+    UrlWrapper review_url = 15;
+    UrlWrapper popup_url = 17;
+    UrlWrapper details_stream_url = 18;
+    UrlWrapper post_acquire_detail_stream_url = 19;
+    ContentRating content_rating = 21;
+    StringWrapper tax_declaration = 25;
+    SignedIn signed_in = 26;
+    RegionalAvailability regional_availability = 28;
+    Image banner_image = 29;
+    Category category = 30;
+    Availability availability = 11;
+
+    message TeacherApprovalInfo {
+      message Group {
+        string title = 1;
+        repeated string values = 2;
+      }
+
+      message ArtworkUrl {
+        string url = 1;
+      }
+
+      message ApprovalArtwork {
+        ArtworkUrl image = 6;
+      }
+
+      message Note {
+        string heading = 1;
+        string body = 2;
+      }
+
+      message Notes {
+        string title = 1;
+        repeated Note notes = 2;
+      }
+
+      Group group1 = 1;
+      Group group2 = 2;
+      Group group3 = 3;
+      Group group4 = 4;
+      Group group5 = 5;
+      Group group6 = 6;
+      string title = 7;
+      string subtitle = 8;
+      ApprovalArtwork artwork = 9;
+      Notes notes = 10;
+    }
+
+    message FamilyLibrary {
+      string html = 1;
+    }
+
+    message Availability {
+      uint32 restriction = 1;
+    }
+
+    message RegionalAvailability {
+      uint32 first = 1;
+      uint32 second = 2;
+    }
+
+    TeacherApprovalInfo teacher_approval = 34;
+    FamilyLibrary family_library = 32;
+  }
+
+  message GenericMetadata {
+    /*
+     * The trailer. A message, not text: the account-only streams send it, and reading it as a
+     * string fails the whole parse on its non-UTF-8 bytes.
+     */
+    message Trailer {
+      message Video {
+        message Source {
+          string watch_url = 1;
+          string video_id = 2;
+        }
+
+        Source source = 1;
+        Image.Metadata thumbnail = 2;
+      }
+
+      /* An mp4 of the trailer, served from Play's own host rather than YouTube. */
+      message Clip {
+        message Source {
+          string url = 1;
+        }
+
+        Source source = 1;
+        Image.Metadata thumbnail = 2;
+      }
+
+      Video video = 1;
+      Clip clip = 2;
+    }
+
+    message TestingProgram {
+      message Subscription {
+        uint32 subscribed = 1;
+        uint32 subscribed_and_installed = 2;
+      }
+
+      Subscription subscription = 2;
+      Image.Metadata image = 4;
+      string display_name = 6;
+    }
+
+    // AppDetails.dependencies (34) field 3 on /details, where 3 is 6, 4 is 5 and 5 is 7.
+    message Dependency {
+      message Module {
+        string name = 1;
+        int64 version_code = 2;
+        int32 type = 3;
+      }
+
+      string package_name = 1;
+      int64 min_version_code = 2;
+      // 1 required, 2 optional, 3 preferred.
+      int32 type = 3;
+      bool is_optional = 4;
+      repeated Module module = 5;
+    }
+
+    // A shared library the app needs installed; AppDetails.dependencies (34) field 13 on /details,
+    // which Play's client converts each entry into field for field.
+    message LibraryDependency {
+      message Details {
+        // Play's client prices the library at this size when positive, else at the entry's own,
+        // and reads version_major only for an SDK library (type 2).
+        message Sdk {
+          int64 size = 1;
+          int32 version_major = 2;
+          int32 unconfirmed_3 = 3;
+        }
+
+        Sdk sdk = 1;
+      }
+
+      string package_name = 1;
+      int32 version_code = 2;
+      // 1 static, 2 SDK.
+      int32 type = 3;
+      int64 size = 4;
+      Details details = 5;
+    }
+
+    // Field numbers differ from /details: Play's client converts 1-3 to 2-4 of AppDetails 34's 12.
+    message ModuleInstall {
+      bool should_stage = 1;
+      bool enable_rollback = 2;
+      bool is_apex = 3;
+    }
+
+    // AppDetails 34's 16 on /details, where 2 is 3. Meaning unconfirmed.
+    message Unconfirmed13 {
+      bool flag_1 = 1;
+      bool flag_2 = 2;
+      float value_5 = 5;
+      optional int32 value_6 = 6;
+    }
+
+    message Archive {
+      int32 derived_apk_id = 1;
+    }
+
+    message AntiTamper {
+      bool transfer_key = 1;
+    }
+
+    // AppDetails.dependencies (34) on /details. Play's client converts every field here into one
+    // there; the comments give the /details number where it differs.
+    message Dependencies {
+      int32 install_location = 1;
+      repeated Dependency dependency = 3;
+      int32 target_sdk = 4;
+      // 8 on /details.
+      int32 target_sandbox_version = 5;
+      // 7 on /details.
+      int32 android_category = 6;
+      // 10 on /details.
+      int64 frosting_id = 7;
+      // 6 on /details.
+      repeated string installer_permissions = 8;
+      // 13 on /details.
+      repeated LibraryDependency library_dependency = 10;
+      // 12 on /details.
+      ModuleInstall module_install = 11;
+      // 16 on /details.
+      Unconfirmed13 unconfirmed_13 = 13;
+      // 17's field 1 on /details.
+      string delivery_token = 14;
+      // 19 on /details.
+      Archive archive = 16;
+      // 23 on /details.
+      bool licensing_flag = 20;
+      // 24 on /details.
+      AntiTamper anti_tamper = 21;
+    }
+
+    message Device {
+      string required_os = 1;
+      string name = 2;
+    }
+
+    message Compatibility {
+      repeated Device device = 1;
+    }
+
+    message EditorsChoice {
+      repeated string bulletins = 1;
+      string award = 2;
+      string title = 3;
+      string subtitle = 4;
+    }
+
+    message UpdateInfo {
+      string changelog = 1;
+      string last_updated = 2;
+    }
+
+    message LaunchInfo {
+      string launch_date = 1;
+      Timestamp timestamp = 2;
+    }
+
+    message Downloads {
+      string label_long = 1;
+      int64 count_rounded = 2;
+      int64 count_exact = 3;
+      string label_abbreviated = 5;
+      string label_short = 6;
+    }
+
+    message InAppPurchases {
+      string price_range = 2;
+    }
+
+    message AppLaunch {
+      string name = 1;
+      string intent_action = 2;
+      string intent_activity = 3;
+    }
+
+    message TopChartInfo {
+      string title = 1;
+      StreamTagMetadata link = 2;
+    }
+
+    message PermissionWrapper {
+      repeated StringWrapper permissions = 1;
+    }
+
+    message VersionInfo {
+      int64 version_code = 1;
+      string version_string = 2;
+      int32 offer_type = 3;
+    }
+
+    message DeletionLinks {
+      string account_deletion_url = 1;
+      string data_deletion_url = 2;
+    }
+
+    message DeletionUrls {
+      DeletionLinks links = 3;
+    }
+
+    message DataDeletion {
+      DeletionUrls urls = 3;
+    }
+
+    message DataDeletionWrapper {
+      DataDeletion deletion = 1;
+    }
+
+    message CertificateData {
+      bytes encoded = 1;
+      bytes public_key = 2;
+    }
+
+    message Signer {
+      CertificateData certificate = 1;
+      int32 scheme = 3;
+    }
+
+    message Signers {
+      repeated Signer signer = 1;
+    }
+
+    message SigningInfo {
+      Signers signers = 1;
+    }
+
+    message ContainsAds {}
+
+    message PlayGames {
+      uint32 enabled = 1;
+      uint32 third = 3;
+    }
+
+    message CommunityVideos {
+      repeated CommunityVideo videos = 1;
+    }
+
+    StringWrapper package_name = 1;
+    VersionInfo version_info = 2;
+
+    StringWrapper promotional_description = 11;
+    DataSafetySummary data_safety_summary = 58;
+    DataSafety data_safety = 59;
+    AppFeatures features = 79;
+    OtherFormFactors other_form_factors = 90;
+    PrivacyPolicy privacy_policy = 24;
+    Downloads downloads = 8;
+    UpdateInfo update_info = 9;
+    Image images = 10;
+    Trailer trailer = 13;
+    Tag developer_tag = 14;
+    DeveloperInfo developer_info = 15;
+    UrlWrapper live_ops_stream = 16;
+    SubItem comparable_item = 20;
+    EditorsChoice editors_choice = 23;
+    PermissionWrapper permission_wrapper = 26;
+    ApkMetadataWrapper apk_metadata_wrapper = 27;
+    ContainsAds contains_ads = 29;
+    Tag category = 30;
+    InAppPurchases in_app_purchases = 31;
+    CertificateWrapper certificate_wrapper = 32;
+    LaunchInfo launch_info = 42;
+    TopChartInfo top_chart = 43;
+    TagWrapper tag = 44;
+    StringWrapper developer_name = 45;
+    ApkMetadataWrapper apk_metadata_wrapper_alt = 47;
+    Image header_image_alt = 68;
+    AppLaunch app_launch = 83;
+    TestingProgram testing_program = 3;
+    Dependencies dependencies = 28;
+    Compatibility compatibility = 63;
+    DataDeletionWrapper data_deletion = 72;
+    SigningInfo signing_info = 82;
+    StringWrapper tagline = 36;
+    PlayGames play_games = 40;
+    SignedIn signed_in = 55;
+    CommunityVideos community_videos = 60;
+    SignedIn signed_in_flags = 100;
+  }
+
+  // Play's own client turns every ApkInfo here into one entry of /details' AppDetails.file
+  // (FileMetadata) and reads the rest as the /details fields named below.
+  message ApkMetadataWrapper {
+    message PatchInfo {
+      int32 base_version_code = 1;
+      int64 size = 2;
+    }
+
+    message ApkInfo {
+      int64 version_code = 1;
+      int64 size = 2;
+      int64 size_compressed = 3;
+      PatchInfo patch = 4;
+    }
+
+    message SplitHotfix {
+      int32 sdk_split_hotfix_version = 1;
+    }
+
+    message SplitApk {
+      string split_name = 1;
+      ApkInfo info = 2;
+      ApkInfo dex_metadata = 3;
+      SplitHotfix hotfix = 4;
+    }
+
+    message AssetPack {
+      string name = 1;
+      ApkInfo info = 2;
+      int64 version = 3;
+    }
+
+    message ApkMetadata {
+      ApkInfo base_apk = 1;
+      repeated SplitApk split_apks = 2;
+      ApkInfo dex_metadata = 3;
+      // AppDetails.dependencies (34) fields 5 and 14 on /details.
+      int32 derived_apk_id = 4;
+      string internal_sharing_id = 5;
+      repeated AssetPack asset_packs = 6;
+      int64 package_size = 7;
+    }
+
+    // Play's generic server-logs cookie, which its client attaches to the details-page badge
+    // it draws from this message.
+    message BadgeLogs {
+      bytes server_logs_cookie = 1;
+    }
+
+    ApkMetadata metadata = 1;
+    ApkInfo main_obb = 2;
+    ApkInfo patch_obb = 3;
+    // AppDetails.infoDownloadSize (9) on /details.
+    int64 total_size = 4;
+    // AppDetails 74 on /details.
+    BadgeLogs badge_logs = 5;
+  }
+
+  message Item {
+    message MetadataWrapper {
+      StringWrapper package_name = 1;
+      RegionalMetadata regional_metadata = 2;
+      GenericMetadata generic_metadata = 3;
+    }
+
+    MetadataWrapper metadata = 2;
+  }
+
+  repeated Item item = 11;
+}
+
+message Label {
+  optional string title = 1;
+  optional Artwork image = 2;
+  optional string subtitle = 3;
+  optional string subtitle_html = 4;
+  optional string description = 8;
+}
+
+message Category {
+  string primary = 1;
+  string secondary = 2;
+}
+
+message Annotation {
+  Label content_rating = 29;
+  Category category = 53;
+}
+
+message StreamTagMetadata {
+  message SearchMetadata {
+    string url = 1;
+    string query = 2;
+    int32 unknown3 = 3;
+    int32 unknown4 = 4;
+  }
+
+  message CategoryMetadata{
+    string url = 1;
+  }
+
+  CategoryMetadata category_metadata = 3;
+  SearchMetadata search_metadata = 4;
+}
+
+message Tag {
+  string  name = 1;
+  StreamTagMetadata metadata = 2;
+  string  category_id = 3;
+  string  genome_id = 4;
+}
+
+message TagWrapper {
+  repeated TagList type1 = 1;
+  repeated TagList type2 = 2;
+  repeated TagList type3 = 3;
+  repeated TagList type4 = 4;
+  repeated TagList type5 = 5;
+  repeated TagList type6 = 6;
+  repeated TagList type7 = 7;
+}
+
+message TagList  {
+  repeated Tag tags = 1;
+}
+
+message ArtworkWrapper {
+  Artwork artwork = 4;
+}
+
+message Artwork {
+  message Dimensions {
+    int32 width = 3;
+    int32 height = 4;
+    float aspect_ratio = 18;
+  }
+
+  message Citation {
+    string title = 11;
+    string url = 12;
+  }
+
+  int32 artwork_type = 1;
+  Dimensions dimensions = 2;
+  string url = 5;
+  string alt_text = 6;
+  string https_url = 7;
+  int32 sequence_position = 8;
+  bool is_fife_url_supported = 9;
+  Citation citation = 10;
+  int32 duration_in_seconds = 14;
+  string fill_color_hex = 15;
+  bool is_autogenerated = 16;
+  ArtworkAttribution attribution = 17;
+  string background_color_hex = 19;
+  ColorPalette color_palette = 20;
+  int32 device_type = 21;
+  bool is_fife_monogram_supported = 22;
+  string alternate_url = 28;
+}
+
+message ArtworkAttribution {
+  string source_name = 1;
+  string source_url = 2;
+  string license_name = 3;
+  string license_url = 4;
+}
+
+message ColorPalette {
+  string light_vibrant = 1;
+  string vibrant = 2;
+  string dark_vibrant = 3;
+  string light_muted = 4;
+  string muted = 5;
+  string dark_muted = 6;
+}
+
+message StringWrapper {
+  string data = 1;
+}
+
+message UrlWrapper {
+  string url = 1;
+  string id = 2;
+}
+
+message Timestamp {
+  uint64 seconds = 1;
+  uint32 nanos = 2;
+}
+
+message TimestampWrapper {
+  Timestamp timestamp = 1;
+}
+
+message TimestampEntry {
+  string entry = 1;
+  Timestamp timestamp = 2;
+}
+
+message TimestampEntryWrapper {
+  string android_id = 1;
+  TimestampEntry entry = 2;
+}
+
+message NestedTimestamp {
+  TimestampWrapper wrapper = 1;
+  Timestamp timestamp = 2;
+}
+
+message TimestampContainer {
+  TimestampEntryWrapper entry_wrapper = 3;
+  NestedTimestamp nested_timestamp = 6;
+}

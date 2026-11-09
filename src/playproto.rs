@@ -318,10 +318,26 @@ pub struct AndroidAppDeliveryData {
     pub sha256: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(message, optional, tag = "21")]
     pub dex_metadata: ::core::option::Option<DexMetadata>,
+    #[prost(message, optional, tag = "22")]
+    pub incremental_signature: ::core::option::Option<IncrementalSignatureData>,
+    #[prost(bool, optional, tag = "24")]
+    pub read_log_logging_allowed: ::core::option::Option<bool>,
+    #[prost(message, optional, tag = "25")]
+    pub nugget_data: ::core::option::Option<NuggetData>,
+    #[prost(string, optional, tag = "26")]
+    pub md5: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(bool, optional, tag = "27")]
+    pub licensing_v2_enabled: ::core::option::Option<bool>,
+    #[prost(message, optional, tag = "28")]
+    pub read_log_config: ::core::option::Option<ReadLogConfig>,
+    #[prost(int32, optional, tag = "29")]
+    pub served_version_code: ::core::option::Option<i32>,
+    #[prost(message, optional, tag = "30")]
+    pub alternate_compressed_app_data: ::core::option::Option<CompressedAppData>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DexMetadata {
     #[prost(int64, optional, tag = "1")]
     pub download_size: ::core::option::Option<i64>,
@@ -329,10 +345,12 @@ pub struct DexMetadata {
     pub sha256: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(string, optional, tag = "3")]
     pub download_url: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "5")]
+    pub compressed_app_data: ::core::option::Option<CompressedAppData>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct SplitDeliveryData {
     #[prost(string, optional, tag = "1")]
     pub name: ::core::option::Option<::prost::alloc::string::String>,
@@ -352,6 +370,14 @@ pub struct SplitDeliveryData {
     pub compressed_app_data: ::core::option::Option<CompressedAppData>,
     #[prost(string, optional, tag = "9")]
     pub sha256: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "11")]
+    pub dex_metadata: ::core::option::Option<DexMetadata>,
+    #[prost(message, optional, tag = "12")]
+    pub incremental_signature: ::core::option::Option<IncrementalSignatureData>,
+    #[prost(string, optional, tag = "15")]
+    pub md5: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "16")]
+    pub alternate_compressed_app_data: ::core::option::Option<CompressedAppData>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -367,10 +393,14 @@ pub struct AndroidAppPatchData {
     pub patch_format: ::core::option::Option<i32>,
     #[prost(int64, optional, tag = "5")]
     pub max_patch_size: ::core::option::Option<i64>,
+    #[prost(string, optional, tag = "7")]
+    pub base_version: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "8")]
+    pub base_sha256: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct CompressedAppData {
     #[prost(int64, optional, tag = "1")]
     pub r#type: ::core::option::Option<i64>,
@@ -378,6 +408,8 @@ pub struct CompressedAppData {
     pub size: ::core::option::Option<i64>,
     #[prost(string, optional, tag = "3")]
     pub download_url: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, repeated, tag = "4")]
+    pub chunk: ::prost::alloc::vec::Vec<CompressedAppChunk>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -2320,6 +2352,12 @@ pub struct AppDetails {
     pub compatibility: ::core::option::Option<Compatibility>,
     #[prost(message, optional, tag = "86")]
     pub support: ::core::option::Option<Support>,
+    #[prost(int64, optional, tag = "70")]
+    pub download_count_exact: ::core::option::Option<i64>,
+    #[prost(message, optional, tag = "65")]
+    pub teacher_approval: ::core::option::Option<TeacherApprovalInfo>,
+    #[prost(message, optional, tag = "74")]
+    pub badge_logs: ::core::option::Option<BadgeLogs>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -2358,6 +2396,10 @@ pub struct TagGroup {
     pub type5: ::core::option::Option<TagType>,
     #[prost(message, optional, tag = "6")]
     pub type6: ::core::option::Option<TagType>,
+    #[prost(message, optional, tag = "7")]
+    pub type7: ::core::option::Option<TagType>,
+    #[prost(message, optional, tag = "9")]
+    pub type9: ::core::option::Option<TagType>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -2505,10 +2547,40 @@ pub struct Dependencies {
     pub split_apks: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     #[prost(message, repeated, tag = "13")]
     pub library_dependency: ::prost::alloc::vec::Vec<LibraryDependency>,
+    #[prost(string, repeated, tag = "6")]
+    pub installer_permissions: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(int32, optional, tag = "7")]
+    pub android_category: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "8")]
+    pub target_sandbox_version: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "9")]
+    pub install_reason: ::core::option::Option<i32>,
+    #[prost(int64, optional, tag = "10")]
+    pub frosting_id: ::core::option::Option<i64>,
+    #[prost(string, optional, tag = "14")]
+    pub internal_sharing_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "12")]
+    pub module_install: ::core::option::Option<ModuleInstall>,
+    #[prost(string, repeated, tag = "15")]
+    pub asset_module_names: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "16")]
+    pub unconfirmed16: ::core::option::Option<Unconfirmed16>,
+    #[prost(message, optional, tag = "17")]
+    pub delivery_token: ::core::option::Option<DeliveryToken>,
+    #[prost(message, optional, tag = "19")]
+    pub archive: ::core::option::Option<Archive>,
+    #[prost(message, optional, tag = "20")]
+    pub reinstall: ::core::option::Option<Reinstall>,
+    #[prost(message, repeated, tag = "22")]
+    pub split: ::prost::alloc::vec::Vec<DependencySplit>,
+    #[prost(bool, optional, tag = "23")]
+    pub licensing_flag: ::core::option::Option<bool>,
+    #[prost(message, optional, tag = "24")]
+    pub anti_tamper: ::core::option::Option<AntiTamper>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Dependency {
     #[prost(string, optional, tag = "1")]
     pub package_name: ::core::option::Option<::prost::alloc::string::String>,
@@ -2516,6 +2588,12 @@ pub struct Dependency {
     pub version: ::core::option::Option<i32>,
     #[prost(int32, optional, tag = "4")]
     pub unknown4: ::core::option::Option<i32>,
+    #[prost(bool, optional, tag = "5")]
+    pub is_optional: ::core::option::Option<bool>,
+    #[prost(int32, optional, tag = "6")]
+    pub r#type: ::core::option::Option<i32>,
+    #[prost(message, repeated, tag = "7")]
+    pub module: ::prost::alloc::vec::Vec<DependencyModule>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -2525,6 +2603,12 @@ pub struct LibraryDependency {
     pub package_name: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(int64, optional, tag = "2")]
     pub version_code: ::core::option::Option<i64>,
+    #[prost(int32, optional, tag = "3")]
+    pub r#type: ::core::option::Option<i32>,
+    #[prost(int64, optional, tag = "4")]
+    pub size: ::core::option::Option<i64>,
+    #[prost(message, optional, tag = "5")]
+    pub details: ::core::option::Option<LibraryDetails>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -2582,6 +2666,12 @@ pub struct FileMetadata {
     pub compressed_size: ::core::option::Option<i64>,
     #[prost(message, repeated, tag = "6")]
     pub patch_details: ::prost::alloc::vec::Vec<PatchDetails>,
+    #[prost(string, optional, tag = "7")]
+    pub asset_module_name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "8")]
+    pub asset_module_version: ::core::option::Option<AssetModuleVersion>,
+    #[prost(message, optional, tag = "9")]
+    pub split_hotfix: ::core::option::Option<SplitHotfix>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -2700,6 +2790,10 @@ pub struct Item {
     pub review_summary_url: ::core::option::Option<::prost::alloc::string::String>,
     #[prost(message, optional, tag = "50")]
     pub content_rating: ::core::option::Option<ContentRating>,
+    #[prost(message, optional, tag = "48")]
+    pub family_badge: ::core::option::Option<FamilyBadge>,
+    #[prost(message, optional, tag = "47")]
+    pub family_library: ::core::option::Option<FamilyLibrary>,
 }
 #[allow(dead_code)]
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -4689,4 +4783,2341 @@ pub mod server_response {
         #[prost(string, optional, tag = "2")]
         pub message: ::core::option::Option<::prost::alloc::string::String>,
     }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CompressedAppChunk {
+    #[prost(string, optional, tag = "1")]
+    pub download_url: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "2")]
+    pub field2: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int64, optional, tag = "3")]
+    pub size: ::core::option::Option<i64>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct MerkleTreeData {
+    #[prost(string, optional, tag = "1")]
+    pub download_url: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int64, optional, tag = "2")]
+    pub size: ::core::option::Option<i64>,
+    #[prost(string, optional, tag = "3")]
+    pub sha256: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct IncrementalSignatureData {
+    #[prost(message, optional, tag = "1")]
+    pub merkle_tree: ::core::option::Option<MerkleTreeData>,
+    #[prost(bytes = "vec", optional, tag = "2")]
+    pub v4_signature: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct NuggetFileData {
+    #[prost(string, optional, tag = "1")]
+    pub download_url: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int64, optional, tag = "2")]
+    pub size: ::core::option::Option<i64>,
+    #[prost(string, optional, tag = "3")]
+    pub sha256: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "4")]
+    pub compressed_app_data: ::core::option::Option<CompressedAppData>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct NuggetData {
+    #[prost(string, repeated, tag = "1")]
+    pub idle_nugget_file_sha256: ::prost::alloc::vec::Vec<
+        ::prost::alloc::string::String,
+    >,
+    #[prost(message, optional, tag = "2")]
+    pub idle_nugget: ::core::option::Option<NuggetFileData>,
+    #[prost(message, optional, tag = "3")]
+    pub rest_nugget: ::core::option::Option<NuggetFileData>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct ReadLogConfig {
+    #[prost(int64, optional, tag = "1")]
+    pub field1: ::core::option::Option<i64>,
+    #[prost(int32, optional, tag = "2")]
+    pub digest_behavior: ::core::option::Option<i32>,
+    #[prost(double, optional, tag = "3")]
+    pub sample_rate: ::core::option::Option<f64>,
+    #[prost(bool, optional, tag = "4")]
+    pub marked_for_removal: ::core::option::Option<bool>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FamilyBadge {
+    #[prost(string, optional, tag = "1")]
+    pub age_label: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "2")]
+    pub age_label_long: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "3")]
+    pub description: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "4")]
+    pub image: ::core::option::Option<family_badge::BadgeImage>,
+    #[prost(int32, optional, tag = "5")]
+    pub state: ::core::option::Option<i32>,
+    #[prost(message, repeated, tag = "7")]
+    pub links: ::prost::alloc::vec::Vec<family_badge::Link>,
+}
+/// Nested message and enum types in `FamilyBadge`.
+pub mod family_badge {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct BadgeImage {
+        #[prost(int32, optional, tag = "2")]
+        pub r#type: ::core::option::Option<i32>,
+        #[prost(message, optional, tag = "6")]
+        pub image: ::core::option::Option<badge_image::Url>,
+        #[prost(message, optional, tag = "7")]
+        pub image_alt: ::core::option::Option<badge_image::Url>,
+    }
+    /// Nested message and enum types in `BadgeImage`.
+    pub mod badge_image {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Url {
+            #[prost(string, optional, tag = "1")]
+            pub url: ::core::option::Option<::prost::alloc::string::String>,
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct Link {
+        #[prost(int32, optional, tag = "1")]
+        pub age_bucket: ::core::option::Option<i32>,
+        #[prost(message, optional, tag = "2")]
+        pub target: ::core::option::Option<link::Target>,
+    }
+    /// Nested message and enum types in `Link`.
+    pub mod link {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Target {
+            #[prost(message, optional, tag = "3")]
+            pub destination: ::core::option::Option<target::Destination>,
+        }
+        /// Nested message and enum types in `Target`.
+        pub mod target {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Destination {
+                #[prost(string, optional, tag = "1")]
+                pub url: ::core::option::Option<::prost::alloc::string::String>,
+            }
+        }
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TeacherApprovalInfo {
+    #[prost(message, optional, tag = "1")]
+    pub group1: ::core::option::Option<teacher_approval_info::Group>,
+    #[prost(message, optional, tag = "2")]
+    pub group2: ::core::option::Option<teacher_approval_info::Group>,
+    #[prost(message, optional, tag = "3")]
+    pub group3: ::core::option::Option<teacher_approval_info::Group>,
+    #[prost(message, optional, tag = "4")]
+    pub group4: ::core::option::Option<teacher_approval_info::Group>,
+    #[prost(message, optional, tag = "5")]
+    pub group5: ::core::option::Option<teacher_approval_info::Group>,
+    #[prost(message, optional, tag = "6")]
+    pub group6: ::core::option::Option<teacher_approval_info::Group>,
+    #[prost(string, optional, tag = "7")]
+    pub title: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "8")]
+    pub subtitle: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "9")]
+    pub artwork: ::core::option::Option<teacher_approval_info::ApprovalArtwork>,
+    #[prost(message, optional, tag = "10")]
+    pub notes: ::core::option::Option<teacher_approval_info::Notes>,
+}
+/// Nested message and enum types in `TeacherApprovalInfo`.
+pub mod teacher_approval_info {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct Group {
+        #[prost(string, optional, tag = "1")]
+        pub title: ::core::option::Option<::prost::alloc::string::String>,
+        #[prost(string, repeated, tag = "2")]
+        pub values: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct ArtworkUrl {
+        #[prost(string, optional, tag = "1")]
+        pub url: ::core::option::Option<::prost::alloc::string::String>,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct ApprovalArtwork {
+        #[prost(message, optional, tag = "6")]
+        pub image: ::core::option::Option<ArtworkUrl>,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct Note {
+        #[prost(string, optional, tag = "1")]
+        pub heading: ::core::option::Option<::prost::alloc::string::String>,
+        #[prost(string, optional, tag = "2")]
+        pub body: ::core::option::Option<::prost::alloc::string::String>,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Notes {
+        #[prost(string, optional, tag = "1")]
+        pub title: ::core::option::Option<::prost::alloc::string::String>,
+        #[prost(message, repeated, tag = "2")]
+        pub notes: ::prost::alloc::vec::Vec<Note>,
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct FamilyLibrary {
+    #[prost(string, optional, tag = "1")]
+    pub html: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ModuleInstall {
+    #[prost(bool, optional, tag = "2")]
+    pub should_stage: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "3")]
+    pub enable_rollback: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "4")]
+    pub is_apex: ::core::option::Option<bool>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct Unconfirmed16 {
+    #[prost(bool, optional, tag = "1")]
+    pub flag1: ::core::option::Option<bool>,
+    #[prost(bool, optional, tag = "3")]
+    pub flag2: ::core::option::Option<bool>,
+    #[prost(float, optional, tag = "5")]
+    pub value5: ::core::option::Option<f32>,
+    #[prost(int32, optional, tag = "6")]
+    pub value6: ::core::option::Option<i32>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeliveryToken {
+    #[prost(string, optional, tag = "1")]
+    pub token: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Archive {
+    #[prost(int32, optional, tag = "1")]
+    pub derived_apk_id: ::core::option::Option<i32>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AntiTamper {
+    #[prost(bool, optional, tag = "1")]
+    pub transfer_key: ::core::option::Option<bool>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DependencyModule {
+    #[prost(string, optional, tag = "1")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int64, optional, tag = "2")]
+    pub version_code: ::core::option::Option<i64>,
+    #[prost(int32, optional, tag = "3")]
+    pub r#type: ::core::option::Option<i32>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DependencySplit {
+    #[prost(string, optional, tag = "1")]
+    pub name: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(int32, optional, tag = "2")]
+    pub sdk_split_hotfix_version: ::core::option::Option<i32>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Reinstall {
+    #[prost(int32, optional, tag = "1")]
+    pub behavior: ::core::option::Option<i32>,
+    #[prost(int64, optional, tag = "2")]
+    pub unconfirmed2: ::core::option::Option<i64>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct LibraryDetails {
+    #[prost(message, optional, tag = "1")]
+    pub sdk: ::core::option::Option<SdkLibrary>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SdkLibrary {
+    #[prost(int64, optional, tag = "1")]
+    pub size: ::core::option::Option<i64>,
+    #[prost(int32, optional, tag = "2")]
+    pub version_major: ::core::option::Option<i32>,
+    #[prost(int32, optional, tag = "3")]
+    pub unconfirmed3: ::core::option::Option<i32>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct AssetModuleVersion {
+    #[prost(int64, optional, tag = "1")]
+    pub version: ::core::option::Option<i64>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct SplitHotfix {
+    #[prost(int32, optional, tag = "1")]
+    pub sdk_split_hotfix_version: ::core::option::Option<i32>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct BadgeLogs {
+    #[prost(bytes = "vec", optional, tag = "1")]
+    pub server_logs_cookie: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamResponse {
+    #[prost(message, repeated, tag = "11")]
+    pub item: ::prost::alloc::vec::Vec<item_response::Item>,
+    #[prost(message, optional, tag = "12")]
+    pub tree: ::core::option::Option<StreamTree>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamTree {
+    #[prost(message, repeated, tag = "1")]
+    pub page: ::prost::alloc::vec::Vec<StreamPage>,
+    #[prost(message, repeated, tag = "2")]
+    pub node: ::prost::alloc::vec::Vec<StreamNode>,
+}
+/// A page is addressed by the URL it was requested with; its children are the page's modules.
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamPage {
+    #[prost(message, optional, tag = "1")]
+    pub key: ::core::option::Option<StreamPageKey>,
+    #[prost(message, optional, tag = "2")]
+    pub content: ::core::option::Option<StreamPageContent>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamPageKey {
+    #[prost(oneof = "stream_page_key::Key", tags = "1")]
+    pub key: ::core::option::Option<stream_page_key::Key>,
+}
+/// Nested message and enum types in `StreamPageKey`.
+pub mod stream_page_key {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Key {
+        #[prost(string, tag = "1")]
+        Url(::prost::alloc::string::String),
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamPageContent {
+    #[prost(message, optional, tag = "2")]
+    pub children: ::core::option::Option<StreamChildren>,
+}
+///
+/// next_page_token continues the list: Play re-requests the parent's own URL (a page's or a
+/// url-keyed node's) with the token appended as the ptkn query parameter.
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamChildren {
+    #[prost(message, repeated, tag = "1")]
+    pub key: ::prost::alloc::vec::Vec<StreamNodeKey>,
+    #[prost(string, tag = "2")]
+    pub next_page_token: ::prost::alloc::string::String,
+}
+///
+/// Module nodes are keyed by their own streamNode URL; item nodes by an opaque id. A child whose
+/// key has no StreamNode in the same response is fetched lazily by the client.
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamNodeKey {
+    #[prost(oneof = "stream_node_key::Key", tags = "1, 2")]
+    pub key: ::core::option::Option<stream_node_key::Key>,
+}
+/// Nested message and enum types in `StreamNodeKey`.
+pub mod stream_node_key {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Key {
+        #[prost(string, tag = "1")]
+        Url(::prost::alloc::string::String),
+        #[prost(string, tag = "2")]
+        Id(::prost::alloc::string::String),
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamNode {
+    #[prost(message, optional, tag = "1")]
+    pub key: ::core::option::Option<StreamNodeKey>,
+    #[prost(message, optional, tag = "2")]
+    pub content: ::core::option::Option<StreamNodeContent>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StreamNodeContent {
+    #[prost(message, optional, tag = "1")]
+    pub element: ::core::option::Option<StreamElement>,
+    #[prost(message, optional, tag = "2")]
+    pub children: ::core::option::Option<StreamChildren>,
+    #[prost(message, optional, tag = "3")]
+    pub item: ::core::option::Option<StreamItemRef>,
+}
+/// Joins an item node to its entry in StreamResponse.item, by the same docid.
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamItemRef {
+    #[prost(message, optional, tag = "1")]
+    pub key: ::core::option::Option<StreamItemKey>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamItemKey {
+    #[prost(message, optional, tag = "1")]
+    pub id: ::core::option::Option<StringWrapper>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamElement {
+    #[prost(message, optional, tag = "1")]
+    pub module: ::core::option::Option<StreamModule>,
+}
+/// Known module layouts. Other module variants are not decoded by this schema.
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamModule {
+    #[prost(oneof = "stream_module::Module", tags = "2, 46, 62")]
+    pub module: ::core::option::Option<stream_module::Module>,
+}
+/// Nested message and enum types in `StreamModule`.
+pub mod stream_module {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Module {
+        #[prost(message, tag = "2")]
+        Cluster(super::ClusterModule),
+        #[prost(message, tag = "46")]
+        DeveloperHeader(super::DeveloperHeaderModule),
+        #[prost(message, tag = "62")]
+        Text(super::TextModule),
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ModuleHeader {
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub subtitle: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "4")]
+    pub image: ::core::option::Option<item_response::image::Metadata>,
+    #[prost(message, optional, tag = "6")]
+    pub link: ::core::option::Option<ModuleLink>,
+}
+/// An action; only the browse-stream variant carries a URL a client can fetch.
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ModuleLink {
+    #[prost(oneof = "module_link::Action", tags = "3")]
+    pub action: ::core::option::Option<module_link::Action>,
+}
+/// Nested message and enum types in `ModuleLink`.
+pub mod module_link {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Action {
+        #[prost(message, tag = "3")]
+        Browse(super::StreamBrowseLink),
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamBrowseLink {
+    #[prost(string, tag = "1")]
+    pub url: ::prost::alloc::string::String,
+}
+/// Carries its title and link twice: inline (1-3) and in the common header (6).
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ClusterModule {
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub subtitle: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "3")]
+    pub link: ::core::option::Option<ModuleLink>,
+    #[prost(message, optional, tag = "6")]
+    pub header: ::core::option::Option<ModuleHeader>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct DeveloperHeaderModule {
+    #[prost(string, tag = "1")]
+    pub title: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "3")]
+    pub icon: ::core::option::Option<item_response::image::Metadata>,
+    #[prost(oneof = "developer_header_module::Cover", tags = "4, 5")]
+    pub cover: ::core::option::Option<developer_header_module::Cover>,
+}
+/// Nested message and enum types in `DeveloperHeaderModule`.
+pub mod developer_header_module {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Cover {
+        #[prost(message, tag = "4")]
+        CoverImage(super::item_response::image::Metadata),
+        #[prost(message, tag = "5")]
+        CoverMedia(super::CoverMedia),
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct CoverMedia {
+    #[prost(message, optional, tag = "2")]
+    pub image: ::core::option::Option<item_response::image::Metadata>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TextModule {
+    #[prost(message, optional, tag = "1")]
+    pub header: ::core::option::Option<ModuleHeader>,
+    #[prost(oneof = "text_module::Body", tags = "3, 4")]
+    pub body: ::core::option::Option<text_module::Body>,
+}
+/// Nested message and enum types in `TextModule`.
+pub mod text_module {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Oneof)]
+    pub enum Body {
+        #[prost(string, tag = "3")]
+        Text(::prost::alloc::string::String),
+        #[prost(message, tag = "4")]
+        FormattedText(super::FormattedText),
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct FormattedText {
+    #[prost(string, tag = "2")]
+    pub text: ::prost::alloc::string::String,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ItemResponse {
+    #[prost(message, repeated, tag = "11")]
+    pub item: ::prost::alloc::vec::Vec<item_response::Item>,
+}
+/// Nested message and enum types in `ItemResponse`.
+pub mod item_response {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Image {
+        #[prost(message, repeated, tag = "1")]
+        pub metadata: ::prost::alloc::vec::Vec<image::Metadata>,
+    }
+    /// Nested message and enum types in `Image`.
+    pub mod image {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Metadata {
+            #[prost(int32, tag = "2")]
+            pub unknown2: i32,
+            #[prost(message, optional, tag = "3")]
+            pub dimensions: ::core::option::Option<metadata::Dimensions>,
+            #[prost(message, optional, tag = "6")]
+            pub metadata: ::core::option::Option<metadata::MetadataEntry>,
+        }
+        /// Nested message and enum types in `Metadata`.
+        pub mod metadata {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Dimensions {
+                #[prost(int32, tag = "1")]
+                pub height: i32,
+                #[prost(int32, tag = "2")]
+                pub width: i32,
+            }
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct MetadataEntry {
+                #[prost(string, tag = "1")]
+                pub url: ::prost::alloc::string::String,
+                #[prost(message, optional, tag = "2")]
+                pub primary_color: ::core::option::Option<metadata_entry::Color>,
+            }
+            /// Nested message and enum types in `MetadataEntry`.
+            pub mod metadata_entry {
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct Color {
+                    #[prost(int32, tag = "1")]
+                    pub r: i32,
+                    #[prost(int32, tag = "2")]
+                    pub g: i32,
+                    #[prost(int32, tag = "3")]
+                    pub b: i32,
+                    #[prost(int32, tag = "4")]
+                    pub a: i32,
+                }
+            }
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct DeveloperInfo {
+        #[prost(string, tag = "1")]
+        pub email: ::prost::alloc::string::String,
+        #[prost(string, tag = "2")]
+        pub website: ::prost::alloc::string::String,
+        #[prost(message, optional, tag = "5")]
+        pub metadata: ::core::option::Option<developer_info::Metadata>,
+    }
+    /// Nested message and enum types in `DeveloperInfo`.
+    pub mod developer_info {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Metadata {
+            #[prost(string, tag = "1")]
+            pub name: ::prost::alloc::string::String,
+            #[prost(string, tag = "2")]
+            pub support_email: ::prost::alloc::string::String,
+            #[prost(string, tag = "3")]
+            pub address: ::prost::alloc::string::String,
+            #[prost(string, tag = "4")]
+            pub phone: ::prost::alloc::string::String,
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct SubItem {
+        #[prost(string, tag = "1")]
+        pub r#type: ::prost::alloc::string::String,
+        #[prost(string, tag = "2")]
+        pub name: ::prost::alloc::string::String,
+        #[prost(string, tag = "3")]
+        pub package_name: ::prost::alloc::string::String,
+        #[prost(string, tag = "6")]
+        pub action: ::prost::alloc::string::String,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct CertificateWrapper {
+        #[prost(message, repeated, tag = "1")]
+        pub certificate_set: ::prost::alloc::vec::Vec<
+            certificate_wrapper::CertificateSet,
+        >,
+    }
+    /// Nested message and enum types in `CertificateWrapper`.
+    pub mod certificate_wrapper {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct CertificateSet {
+            #[prost(string, tag = "1")]
+            pub sha1: ::prost::alloc::string::String,
+            #[prost(string, tag = "2")]
+            pub sha256: ::prost::alloc::string::String,
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct ContentRating {
+        #[prost(string, tag = "1")]
+        pub title: ::prost::alloc::string::String,
+        #[prost(string, tag = "2")]
+        pub recommendation_and_description_html: ::prost::alloc::string::String,
+        #[prost(message, optional, tag = "3")]
+        pub image: ::core::option::Option<image::Metadata>,
+        #[prost(message, optional, tag = "4")]
+        pub image_alt: ::core::option::Option<image::Metadata>,
+        #[prost(string, tag = "5")]
+        pub recommendation: ::prost::alloc::string::String,
+        #[prost(string, tag = "6")]
+        pub description: ::prost::alloc::string::String,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Price {
+        #[prost(message, optional, tag = "1")]
+        pub offer_wrapper: ::core::option::Option<price::OfferWrapper>,
+    }
+    /// Nested message and enum types in `Price`.
+    pub mod price {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct OfferWrapper {
+            #[prost(message, repeated, tag = "1")]
+            pub offer: ::prost::alloc::vec::Vec<offer_wrapper::Offer>,
+        }
+        /// Nested message and enum types in `OfferWrapper`.
+        pub mod offer_wrapper {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Offer {
+                #[prost(message, optional, tag = "1")]
+                pub offer_type: ::core::option::Option<offer::OfferType>,
+                #[prost(message, optional, tag = "2")]
+                pub amount: ::core::option::Option<offer::Amount>,
+                #[prost(message, optional, tag = "3")]
+                pub buy_button: ::core::option::Option<offer::BuyButton>,
+                #[prost(bool, tag = "4")]
+                pub checkout_required: bool,
+                #[prost(message, optional, tag = "11")]
+                pub note: ::core::option::Option<offer::Note>,
+            }
+            /// Nested message and enum types in `Offer`.
+            pub mod offer {
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct OfferType {
+                    #[prost(int32, tag = "1")]
+                    pub r#type: i32,
+                }
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct Amount {
+                    #[prost(message, optional, tag = "1")]
+                    pub money: ::core::option::Option<amount::Money>,
+                    #[prost(int32, tag = "3")]
+                    pub unknown3: i32,
+                }
+                /// Nested message and enum types in `Amount`.
+                pub mod amount {
+                    #[allow(dead_code)]
+                    #[derive(serde::Serialize, serde::Deserialize)]
+                    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+                    pub struct Money {
+                        #[prost(int64, tag = "1")]
+                        pub micros: i64,
+                        #[prost(string, tag = "2")]
+                        pub formatted_amount: ::prost::alloc::string::String,
+                    }
+                }
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct BuyButton {
+                    #[prost(string, tag = "3")]
+                    pub label: ::prost::alloc::string::String,
+                }
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct Note {
+                    #[prost(string, tag = "1")]
+                    pub text: ::prost::alloc::string::String,
+                }
+            }
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Rating {
+        #[prost(float, tag = "1")]
+        pub star_rating: f32,
+        #[prost(uint64, tag = "2")]
+        pub rating_count: u64,
+        #[prost(uint64, tag = "3")]
+        pub rating_one_star: u64,
+        #[prost(uint64, tag = "4")]
+        pub rating_two_star: u64,
+        #[prost(uint64, tag = "5")]
+        pub rating_three_star: u64,
+        #[prost(uint64, tag = "6")]
+        pub rating_four_star: u64,
+        #[prost(uint64, tag = "7")]
+        pub rating_five_star: u64,
+        #[prost(string, tag = "8")]
+        pub rating_label: ::prost::alloc::string::String,
+        #[prost(string, tag = "10")]
+        pub rating_count_label_abbreviated: ::prost::alloc::string::String,
+        #[prost(string, tag = "11")]
+        pub rating_count_label: ::prost::alloc::string::String,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct Share {
+        #[prost(message, optional, tag = "1")]
+        pub target: ::core::option::Option<share::Target>,
+    }
+    /// Nested message and enum types in `Share`.
+    pub mod share {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Target {
+            #[prost(message, optional, tag = "37")]
+            pub play_store: ::core::option::Option<super::super::UrlWrapper>,
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct PrivacyPolicy {
+        #[prost(message, optional, tag = "1")]
+        pub target: ::core::option::Option<privacy_policy::Target>,
+    }
+    /// Nested message and enum types in `PrivacyPolicy`.
+    pub mod privacy_policy {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Target {
+            #[prost(message, optional, tag = "36")]
+            pub policy: ::core::option::Option<super::super::UrlWrapper>,
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct FamilyBadge {
+        #[prost(string, tag = "1")]
+        pub age_label: ::prost::alloc::string::String,
+        #[prost(string, tag = "2")]
+        pub age_label_long: ::prost::alloc::string::String,
+        #[prost(string, tag = "3")]
+        pub description: ::prost::alloc::string::String,
+        #[prost(message, optional, tag = "4")]
+        pub image: ::core::option::Option<image::Metadata>,
+        #[prost(int32, tag = "5")]
+        pub state: i32,
+        #[prost(message, repeated, tag = "7")]
+        pub links: ::prost::alloc::vec::Vec<family_badge::Link>,
+    }
+    /// Nested message and enum types in `FamilyBadge`.
+    pub mod family_badge {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Category {
+            #[prost(message, optional, tag = "3")]
+            pub browse: ::core::option::Option<super::super::UrlWrapper>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Link {
+            #[prost(int32, tag = "1")]
+            pub age_bucket: i32,
+            #[prost(message, optional, tag = "2")]
+            pub category: ::core::option::Option<Category>,
+        }
+    }
+    /// The details page's data-safety summary card: one row per headline (sharing, collection,
+    /// encryption, deletion). The security-practices section is DataSafety.security.
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct DataSafetySummary {
+        #[prost(message, repeated, tag = "4")]
+        pub rows: ::prost::alloc::vec::Vec<data_safety_summary::Row>,
+    }
+    /// Nested message and enum types in `DataSafetySummary`.
+    pub mod data_safety_summary {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Row {
+            #[prost(string, tag = "2")]
+            pub title: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "4")]
+            pub subtitle: ::core::option::Option<row::Html>,
+            #[prost(message, optional, tag = "5")]
+            pub icon: ::core::option::Option<super::image::Metadata>,
+        }
+        /// Nested message and enum types in `Row`.
+        pub mod row {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Html {
+                #[prost(string, tag = "2")]
+                pub html: ::prost::alloc::string::String,
+            }
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct DataSafety {
+        #[prost(message, optional, tag = "3")]
+        pub learn_more: ::core::option::Option<data_safety::LearnMore>,
+        #[prost(message, optional, tag = "5")]
+        pub sections: ::core::option::Option<data_safety::Sections>,
+        #[prost(message, optional, tag = "10")]
+        pub security: ::core::option::Option<data_safety::Security>,
+    }
+    /// Nested message and enum types in `DataSafety`.
+    pub mod data_safety {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Html {
+            #[prost(string, tag = "2")]
+            pub html: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct LearnMore {
+            #[prost(message, optional, tag = "36")]
+            pub url: ::core::option::Option<super::super::UrlWrapper>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Entry {
+            #[prost(message, optional, tag = "1")]
+            pub header: ::core::option::Option<entry::Header>,
+            #[prost(message, repeated, tag = "5")]
+            pub data: ::prost::alloc::vec::Vec<entry::DataPoint>,
+        }
+        /// Nested message and enum types in `Entry`.
+        pub mod entry {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Header {
+                #[prost(string, tag = "2")]
+                pub name: ::prost::alloc::string::String,
+                #[prost(message, optional, tag = "4")]
+                pub summary: ::core::option::Option<header::Summary>,
+                #[prost(message, optional, tag = "5")]
+                pub icon: ::core::option::Option<super::super::image::Metadata>,
+            }
+            /// Nested message and enum types in `Header`.
+            pub mod header {
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct Summary {
+                    #[prost(string, tag = "2")]
+                    pub text: ::prost::alloc::string::String,
+                }
+            }
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct DataPoint {
+                #[prost(string, tag = "1")]
+                pub name: ::prost::alloc::string::String,
+                #[prost(int32, tag = "2")]
+                pub optional: i32,
+                #[prost(string, tag = "3")]
+                pub purposes: ::prost::alloc::string::String,
+            }
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Section {
+            #[prost(message, repeated, tag = "1")]
+            pub entries: ::prost::alloc::vec::Vec<Entry>,
+            #[prost(string, tag = "2")]
+            pub title: ::prost::alloc::string::String,
+            #[prost(string, tag = "3")]
+            pub subtitle: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "6")]
+            pub icon: ::core::option::Option<super::image::Metadata>,
+            #[prost(message, optional, tag = "7")]
+            pub description: ::core::option::Option<Html>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Sections {
+            #[prost(message, optional, tag = "1")]
+            pub shared: ::core::option::Option<Section>,
+            #[prost(message, optional, tag = "2")]
+            pub collected: ::core::option::Option<Section>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Security {
+            #[prost(message, optional, tag = "1")]
+            pub icon: ::core::option::Option<super::image::Metadata>,
+            #[prost(string, tag = "2")]
+            pub title: ::prost::alloc::string::String,
+            #[prost(message, repeated, tag = "3")]
+            pub practices: ::prost::alloc::vec::Vec<security::Practice>,
+        }
+        /// Nested message and enum types in `Security`.
+        pub mod security {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Practice {
+                #[prost(string, tag = "2")]
+                pub title: ::prost::alloc::string::String,
+                #[prost(message, optional, tag = "4")]
+                pub description: ::core::option::Option<super::Html>,
+                #[prost(message, optional, tag = "5")]
+                pub icon: ::core::option::Option<super::super::image::Metadata>,
+            }
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct FeaturedReviews {
+        #[prost(message, repeated, tag = "1")]
+        pub reviews: ::prost::alloc::vec::Vec<featured_reviews::Review>,
+    }
+    /// Nested message and enum types in `FeaturedReviews`.
+    pub mod featured_reviews {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Review {
+            #[prost(int32, tag = "1")]
+            pub star_rating: i32,
+            #[prost(string, tag = "3")]
+            pub comment: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "4")]
+            pub timestamp: ::core::option::Option<super::super::Timestamp>,
+            #[prost(string, tag = "5")]
+            pub review_url: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "7")]
+            pub author: ::core::option::Option<review::Author>,
+            #[prost(message, optional, tag = "11")]
+            pub reply: ::core::option::Option<review::Reply>,
+        }
+        /// Nested message and enum types in `Review`.
+        pub mod review {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Author {
+                #[prost(message, optional, tag = "7")]
+                pub avatar: ::core::option::Option<super::super::image::Metadata>,
+                #[prost(string, tag = "8")]
+                pub name: ::prost::alloc::string::String,
+            }
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Reply {
+                #[prost(string, tag = "1")]
+                pub text: ::prost::alloc::string::String,
+                #[prost(message, optional, tag = "2")]
+                pub timestamp: ::core::option::Option<super::super::super::Timestamp>,
+            }
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct ReviewTips {
+        #[prost(message, repeated, tag = "1")]
+        pub tips: ::prost::alloc::vec::Vec<review_tips::Tip>,
+    }
+    /// Nested message and enum types in `ReviewTips`.
+    pub mod review_tips {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Tip {
+            #[prost(message, optional, tag = "1")]
+            pub id: ::core::option::Option<tip::Id>,
+            #[prost(string, tag = "2")]
+            pub text: ::prost::alloc::string::String,
+            #[prost(int32, tag = "3")]
+            pub polarity: i32,
+            #[prost(string, tag = "4")]
+            pub review_count_label: ::prost::alloc::string::String,
+        }
+        /// Nested message and enum types in `Tip`.
+        pub mod tip {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Id {
+                #[prost(string, tag = "1")]
+                pub id: ::prost::alloc::string::String,
+            }
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct AppFeatures {
+        #[prost(message, repeated, tag = "1")]
+        pub groups: ::prost::alloc::vec::Vec<app_features::Group>,
+    }
+    /// Nested message and enum types in `AppFeatures`.
+    pub mod app_features {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Feature {
+            #[prost(string, tag = "1")]
+            pub title: ::prost::alloc::string::String,
+            #[prost(string, tag = "2")]
+            pub description: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Group {
+            #[prost(string, tag = "1")]
+            pub query: ::prost::alloc::string::String,
+            #[prost(message, repeated, tag = "2")]
+            pub features: ::prost::alloc::vec::Vec<Feature>,
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct OtherFormFactors {
+        #[prost(message, repeated, tag = "1")]
+        pub surfaces: ::prost::alloc::vec::Vec<other_form_factors::Surface>,
+    }
+    /// Nested message and enum types in `OtherFormFactors`.
+    pub mod other_form_factors {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Surface {
+            #[prost(int32, tag = "1")]
+            pub r#type: i32,
+            #[prost(message, optional, tag = "4")]
+            pub target: ::core::option::Option<surface::Target>,
+        }
+        /// Nested message and enum types in `Surface`.
+        pub mod surface {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Browse {
+                #[prost(message, optional, tag = "3")]
+                pub url: ::core::option::Option<super::super::super::UrlWrapper>,
+            }
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, ::prost::Message)]
+            pub struct Target {
+                #[prost(message, optional, tag = "1")]
+                pub browse: ::core::option::Option<Browse>,
+                #[prost(string, tag = "2")]
+                pub name: ::prost::alloc::string::String,
+                #[prost(message, optional, tag = "3")]
+                pub icon: ::core::option::Option<super::super::Image>,
+            }
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct Category {
+        #[prost(string, tag = "1")]
+        pub name: ::prost::alloc::string::String,
+        #[prost(message, optional, tag = "2")]
+        pub link: ::core::option::Option<super::StreamTagMetadata>,
+        #[prost(string, tag = "3")]
+        pub id: ::prost::alloc::string::String,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct SignedIn {
+        #[prost(uint32, tag = "1")]
+        pub value: u32,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct CommunityVideo {
+        #[prost(message, optional, tag = "1")]
+        pub media: ::core::option::Option<community_video::Media>,
+        #[prost(string, tag = "2")]
+        pub title: ::prost::alloc::string::String,
+        #[prost(string, tag = "3")]
+        pub channel: ::prost::alloc::string::String,
+        #[prost(uint64, tag = "4")]
+        pub views: u64,
+    }
+    /// Nested message and enum types in `CommunityVideo`.
+    pub mod community_video {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Media {
+            #[prost(message, optional, tag = "1")]
+            pub video: ::core::option::Option<media::Video>,
+            #[prost(message, optional, tag = "2")]
+            pub thumbnail: ::core::option::Option<super::image::Metadata>,
+        }
+        /// Nested message and enum types in `Media`.
+        pub mod media {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Video {
+                #[prost(string, tag = "1")]
+                pub url: ::prost::alloc::string::String,
+                #[prost(string, tag = "2")]
+                pub id: ::prost::alloc::string::String,
+                #[prost(bytes = "vec", tag = "6")]
+                pub playback: ::prost::alloc::vec::Vec<u8>,
+            }
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct RegionalMetadata {
+        #[prost(message, optional, tag = "1")]
+        pub app_name: ::core::option::Option<super::StringWrapper>,
+        #[prost(message, optional, tag = "2")]
+        pub icon: ::core::option::Option<Image>,
+        #[prost(message, optional, tag = "7")]
+        pub rating: ::core::option::Option<Rating>,
+        #[prost(message, optional, tag = "8")]
+        pub description: ::core::option::Option<super::StringWrapper>,
+        #[prost(message, optional, tag = "9")]
+        pub share: ::core::option::Option<Share>,
+        #[prost(message, optional, tag = "10")]
+        pub price: ::core::option::Option<Price>,
+        #[prost(message, optional, tag = "14")]
+        pub review_questions_url: ::core::option::Option<super::UrlWrapper>,
+        #[prost(message, optional, tag = "33")]
+        pub family_badge: ::core::option::Option<FamilyBadge>,
+        #[prost(message, optional, tag = "38")]
+        pub featured_reviews: ::core::option::Option<FeaturedReviews>,
+        #[prost(message, optional, tag = "41")]
+        pub review_tips: ::core::option::Option<ReviewTips>,
+        #[prost(message, optional, tag = "15")]
+        pub review_url: ::core::option::Option<super::UrlWrapper>,
+        #[prost(message, optional, tag = "17")]
+        pub popup_url: ::core::option::Option<super::UrlWrapper>,
+        #[prost(message, optional, tag = "18")]
+        pub details_stream_url: ::core::option::Option<super::UrlWrapper>,
+        #[prost(message, optional, tag = "19")]
+        pub post_acquire_detail_stream_url: ::core::option::Option<super::UrlWrapper>,
+        #[prost(message, optional, tag = "21")]
+        pub content_rating: ::core::option::Option<ContentRating>,
+        #[prost(message, optional, tag = "25")]
+        pub tax_declaration: ::core::option::Option<super::StringWrapper>,
+        #[prost(message, optional, tag = "26")]
+        pub signed_in: ::core::option::Option<SignedIn>,
+        #[prost(message, optional, tag = "28")]
+        pub regional_availability: ::core::option::Option<
+            regional_metadata::RegionalAvailability,
+        >,
+        #[prost(message, optional, tag = "29")]
+        pub banner_image: ::core::option::Option<Image>,
+        #[prost(message, optional, tag = "30")]
+        pub category: ::core::option::Option<Category>,
+        #[prost(message, optional, tag = "11")]
+        pub availability: ::core::option::Option<regional_metadata::Availability>,
+        #[prost(message, optional, tag = "34")]
+        pub teacher_approval: ::core::option::Option<
+            regional_metadata::TeacherApprovalInfo,
+        >,
+        #[prost(message, optional, tag = "32")]
+        pub family_library: ::core::option::Option<regional_metadata::FamilyLibrary>,
+    }
+    /// Nested message and enum types in `RegionalMetadata`.
+    pub mod regional_metadata {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct TeacherApprovalInfo {
+            #[prost(message, optional, tag = "1")]
+            pub group1: ::core::option::Option<teacher_approval_info::Group>,
+            #[prost(message, optional, tag = "2")]
+            pub group2: ::core::option::Option<teacher_approval_info::Group>,
+            #[prost(message, optional, tag = "3")]
+            pub group3: ::core::option::Option<teacher_approval_info::Group>,
+            #[prost(message, optional, tag = "4")]
+            pub group4: ::core::option::Option<teacher_approval_info::Group>,
+            #[prost(message, optional, tag = "5")]
+            pub group5: ::core::option::Option<teacher_approval_info::Group>,
+            #[prost(message, optional, tag = "6")]
+            pub group6: ::core::option::Option<teacher_approval_info::Group>,
+            #[prost(string, tag = "7")]
+            pub title: ::prost::alloc::string::String,
+            #[prost(string, tag = "8")]
+            pub subtitle: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "9")]
+            pub artwork: ::core::option::Option<teacher_approval_info::ApprovalArtwork>,
+            #[prost(message, optional, tag = "10")]
+            pub notes: ::core::option::Option<teacher_approval_info::Notes>,
+        }
+        /// Nested message and enum types in `TeacherApprovalInfo`.
+        pub mod teacher_approval_info {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Group {
+                #[prost(string, tag = "1")]
+                pub title: ::prost::alloc::string::String,
+                #[prost(string, repeated, tag = "2")]
+                pub values: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+            }
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct ArtworkUrl {
+                #[prost(string, tag = "1")]
+                pub url: ::prost::alloc::string::String,
+            }
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct ApprovalArtwork {
+                #[prost(message, optional, tag = "6")]
+                pub image: ::core::option::Option<ArtworkUrl>,
+            }
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Note {
+                #[prost(string, tag = "1")]
+                pub heading: ::prost::alloc::string::String,
+                #[prost(string, tag = "2")]
+                pub body: ::prost::alloc::string::String,
+            }
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, ::prost::Message)]
+            pub struct Notes {
+                #[prost(string, tag = "1")]
+                pub title: ::prost::alloc::string::String,
+                #[prost(message, repeated, tag = "2")]
+                pub notes: ::prost::alloc::vec::Vec<Note>,
+            }
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct FamilyLibrary {
+            #[prost(string, tag = "1")]
+            pub html: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Availability {
+            #[prost(uint32, tag = "1")]
+            pub restriction: u32,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct RegionalAvailability {
+            #[prost(uint32, tag = "1")]
+            pub first: u32,
+            #[prost(uint32, tag = "2")]
+            pub second: u32,
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct GenericMetadata {
+        #[prost(message, optional, tag = "1")]
+        pub package_name: ::core::option::Option<super::StringWrapper>,
+        #[prost(message, optional, tag = "2")]
+        pub version_info: ::core::option::Option<generic_metadata::VersionInfo>,
+        #[prost(message, optional, tag = "11")]
+        pub promotional_description: ::core::option::Option<super::StringWrapper>,
+        #[prost(message, optional, tag = "58")]
+        pub data_safety_summary: ::core::option::Option<DataSafetySummary>,
+        #[prost(message, optional, tag = "59")]
+        pub data_safety: ::core::option::Option<DataSafety>,
+        #[prost(message, optional, tag = "79")]
+        pub features: ::core::option::Option<AppFeatures>,
+        #[prost(message, optional, tag = "90")]
+        pub other_form_factors: ::core::option::Option<OtherFormFactors>,
+        #[prost(message, optional, tag = "24")]
+        pub privacy_policy: ::core::option::Option<PrivacyPolicy>,
+        #[prost(message, optional, tag = "8")]
+        pub downloads: ::core::option::Option<generic_metadata::Downloads>,
+        #[prost(message, optional, tag = "9")]
+        pub update_info: ::core::option::Option<generic_metadata::UpdateInfo>,
+        #[prost(message, optional, tag = "10")]
+        pub images: ::core::option::Option<Image>,
+        #[prost(message, optional, tag = "13")]
+        pub trailer: ::core::option::Option<generic_metadata::Trailer>,
+        #[prost(message, optional, tag = "14")]
+        pub developer_tag: ::core::option::Option<super::Tag>,
+        #[prost(message, optional, tag = "15")]
+        pub developer_info: ::core::option::Option<DeveloperInfo>,
+        #[prost(message, optional, tag = "16")]
+        pub live_ops_stream: ::core::option::Option<super::UrlWrapper>,
+        #[prost(message, optional, tag = "20")]
+        pub comparable_item: ::core::option::Option<SubItem>,
+        #[prost(message, optional, tag = "23")]
+        pub editors_choice: ::core::option::Option<generic_metadata::EditorsChoice>,
+        #[prost(message, optional, tag = "26")]
+        pub permission_wrapper: ::core::option::Option<
+            generic_metadata::PermissionWrapper,
+        >,
+        #[prost(message, optional, tag = "27")]
+        pub apk_metadata_wrapper: ::core::option::Option<ApkMetadataWrapper>,
+        #[prost(message, optional, tag = "29")]
+        pub contains_ads: ::core::option::Option<generic_metadata::ContainsAds>,
+        #[prost(message, optional, tag = "30")]
+        pub category: ::core::option::Option<super::Tag>,
+        #[prost(message, optional, tag = "31")]
+        pub in_app_purchases: ::core::option::Option<generic_metadata::InAppPurchases>,
+        #[prost(message, optional, tag = "32")]
+        pub certificate_wrapper: ::core::option::Option<CertificateWrapper>,
+        #[prost(message, optional, tag = "42")]
+        pub launch_info: ::core::option::Option<generic_metadata::LaunchInfo>,
+        #[prost(message, optional, tag = "43")]
+        pub top_chart: ::core::option::Option<generic_metadata::TopChartInfo>,
+        #[prost(message, optional, tag = "44")]
+        pub tag: ::core::option::Option<super::TagWrapper>,
+        #[prost(message, optional, tag = "45")]
+        pub developer_name: ::core::option::Option<super::StringWrapper>,
+        #[prost(message, optional, tag = "47")]
+        pub apk_metadata_wrapper_alt: ::core::option::Option<ApkMetadataWrapper>,
+        #[prost(message, optional, tag = "68")]
+        pub header_image_alt: ::core::option::Option<Image>,
+        #[prost(message, optional, tag = "83")]
+        pub app_launch: ::core::option::Option<generic_metadata::AppLaunch>,
+        #[prost(message, optional, tag = "3")]
+        pub testing_program: ::core::option::Option<generic_metadata::TestingProgram>,
+        #[prost(message, optional, tag = "28")]
+        pub dependencies: ::core::option::Option<generic_metadata::Dependencies>,
+        #[prost(message, optional, tag = "63")]
+        pub compatibility: ::core::option::Option<generic_metadata::Compatibility>,
+        #[prost(message, optional, tag = "72")]
+        pub data_deletion: ::core::option::Option<generic_metadata::DataDeletionWrapper>,
+        #[prost(message, optional, tag = "82")]
+        pub signing_info: ::core::option::Option<generic_metadata::SigningInfo>,
+        #[prost(message, optional, tag = "36")]
+        pub tagline: ::core::option::Option<super::StringWrapper>,
+        #[prost(message, optional, tag = "40")]
+        pub play_games: ::core::option::Option<generic_metadata::PlayGames>,
+        #[prost(message, optional, tag = "55")]
+        pub signed_in: ::core::option::Option<SignedIn>,
+        #[prost(message, optional, tag = "60")]
+        pub community_videos: ::core::option::Option<generic_metadata::CommunityVideos>,
+        #[prost(message, optional, tag = "100")]
+        pub signed_in_flags: ::core::option::Option<SignedIn>,
+    }
+    /// Nested message and enum types in `GenericMetadata`.
+    pub mod generic_metadata {
+        ///
+        /// The trailer. A message, not text: the account-only streams send it, and reading it as a
+        /// string fails the whole parse on its non-UTF-8 bytes.
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Trailer {
+            #[prost(message, optional, tag = "1")]
+            pub video: ::core::option::Option<trailer::Video>,
+            #[prost(message, optional, tag = "2")]
+            pub clip: ::core::option::Option<trailer::Clip>,
+        }
+        /// Nested message and enum types in `Trailer`.
+        pub mod trailer {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Video {
+                #[prost(message, optional, tag = "1")]
+                pub source: ::core::option::Option<video::Source>,
+                #[prost(message, optional, tag = "2")]
+                pub thumbnail: ::core::option::Option<super::super::image::Metadata>,
+            }
+            /// Nested message and enum types in `Video`.
+            pub mod video {
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct Source {
+                    #[prost(string, tag = "1")]
+                    pub watch_url: ::prost::alloc::string::String,
+                    #[prost(string, tag = "2")]
+                    pub video_id: ::prost::alloc::string::String,
+                }
+            }
+            /// An mp4 of the trailer, served from Play's own host rather than YouTube.
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Clip {
+                #[prost(message, optional, tag = "1")]
+                pub source: ::core::option::Option<clip::Source>,
+                #[prost(message, optional, tag = "2")]
+                pub thumbnail: ::core::option::Option<super::super::image::Metadata>,
+            }
+            /// Nested message and enum types in `Clip`.
+            pub mod clip {
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct Source {
+                    #[prost(string, tag = "1")]
+                    pub url: ::prost::alloc::string::String,
+                }
+            }
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct TestingProgram {
+            #[prost(message, optional, tag = "2")]
+            pub subscription: ::core::option::Option<testing_program::Subscription>,
+            #[prost(message, optional, tag = "4")]
+            pub image: ::core::option::Option<super::image::Metadata>,
+            #[prost(string, tag = "6")]
+            pub display_name: ::prost::alloc::string::String,
+        }
+        /// Nested message and enum types in `TestingProgram`.
+        pub mod testing_program {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Subscription {
+                #[prost(uint32, tag = "1")]
+                pub subscribed: u32,
+                #[prost(uint32, tag = "2")]
+                pub subscribed_and_installed: u32,
+            }
+        }
+        /// AppDetails.dependencies (34) field 3 on /details, where 3 is 6, 4 is 5 and 5 is 7.
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Dependency {
+            #[prost(string, tag = "1")]
+            pub package_name: ::prost::alloc::string::String,
+            #[prost(int64, tag = "2")]
+            pub min_version_code: i64,
+            /// 1 required, 2 optional, 3 preferred.
+            #[prost(int32, tag = "3")]
+            pub r#type: i32,
+            #[prost(bool, tag = "4")]
+            pub is_optional: bool,
+            #[prost(message, repeated, tag = "5")]
+            pub module: ::prost::alloc::vec::Vec<dependency::Module>,
+        }
+        /// Nested message and enum types in `Dependency`.
+        pub mod dependency {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Module {
+                #[prost(string, tag = "1")]
+                pub name: ::prost::alloc::string::String,
+                #[prost(int64, tag = "2")]
+                pub version_code: i64,
+                #[prost(int32, tag = "3")]
+                pub r#type: i32,
+            }
+        }
+        /// A shared library the app needs installed; AppDetails.dependencies (34) field 13 on /details,
+        /// which Play's client converts each entry into field for field.
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct LibraryDependency {
+            #[prost(string, tag = "1")]
+            pub package_name: ::prost::alloc::string::String,
+            #[prost(int32, tag = "2")]
+            pub version_code: i32,
+            /// 1 static, 2 SDK.
+            #[prost(int32, tag = "3")]
+            pub r#type: i32,
+            #[prost(int64, tag = "4")]
+            pub size: i64,
+            #[prost(message, optional, tag = "5")]
+            pub details: ::core::option::Option<library_dependency::Details>,
+        }
+        /// Nested message and enum types in `LibraryDependency`.
+        pub mod library_dependency {
+            #[allow(dead_code)]
+            #[derive(serde::Serialize, serde::Deserialize)]
+            #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+            pub struct Details {
+                #[prost(message, optional, tag = "1")]
+                pub sdk: ::core::option::Option<details::Sdk>,
+            }
+            /// Nested message and enum types in `Details`.
+            pub mod details {
+                /// Play's client prices the library at this size when positive, else at the entry's own,
+                /// and reads version_major only for an SDK library (type 2).
+                #[allow(dead_code)]
+                #[derive(serde::Serialize, serde::Deserialize)]
+                #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+                pub struct Sdk {
+                    #[prost(int64, tag = "1")]
+                    pub size: i64,
+                    #[prost(int32, tag = "2")]
+                    pub version_major: i32,
+                    #[prost(int32, tag = "3")]
+                    pub unconfirmed_3: i32,
+                }
+            }
+        }
+        /// Field numbers differ from /details: Play's client converts 1-3 to 2-4 of AppDetails 34's 12.
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct ModuleInstall {
+            #[prost(bool, tag = "1")]
+            pub should_stage: bool,
+            #[prost(bool, tag = "2")]
+            pub enable_rollback: bool,
+            #[prost(bool, tag = "3")]
+            pub is_apex: bool,
+        }
+        /// AppDetails 34's 16 on /details, where 2 is 3. Meaning unconfirmed.
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, ::prost::Message)]
+        pub struct Unconfirmed13 {
+            #[prost(bool, tag = "1")]
+            pub flag_1: bool,
+            #[prost(bool, tag = "2")]
+            pub flag_2: bool,
+            #[prost(float, tag = "5")]
+            pub value_5: f32,
+            #[prost(int32, optional, tag = "6")]
+            pub value_6: ::core::option::Option<i32>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Archive {
+            #[prost(int32, tag = "1")]
+            pub derived_apk_id: i32,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct AntiTamper {
+            #[prost(bool, tag = "1")]
+            pub transfer_key: bool,
+        }
+        /// AppDetails.dependencies (34) on /details. Play's client converts every field here into one
+        /// there; the comments give the /details number where it differs.
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Dependencies {
+            #[prost(int32, tag = "1")]
+            pub install_location: i32,
+            #[prost(message, repeated, tag = "3")]
+            pub dependency: ::prost::alloc::vec::Vec<Dependency>,
+            #[prost(int32, tag = "4")]
+            pub target_sdk: i32,
+            /// 8 on /details.
+            #[prost(int32, tag = "5")]
+            pub target_sandbox_version: i32,
+            /// 7 on /details.
+            #[prost(int32, tag = "6")]
+            pub android_category: i32,
+            /// 10 on /details.
+            #[prost(int64, tag = "7")]
+            pub frosting_id: i64,
+            /// 6 on /details.
+            #[prost(string, repeated, tag = "8")]
+            pub installer_permissions: ::prost::alloc::vec::Vec<
+                ::prost::alloc::string::String,
+            >,
+            /// 13 on /details.
+            #[prost(message, repeated, tag = "10")]
+            pub library_dependency: ::prost::alloc::vec::Vec<LibraryDependency>,
+            /// 12 on /details.
+            #[prost(message, optional, tag = "11")]
+            pub module_install: ::core::option::Option<ModuleInstall>,
+            /// 16 on /details.
+            #[prost(message, optional, tag = "13")]
+            pub unconfirmed_13: ::core::option::Option<Unconfirmed13>,
+            /// 17's field 1 on /details.
+            #[prost(string, tag = "14")]
+            pub delivery_token: ::prost::alloc::string::String,
+            /// 19 on /details.
+            #[prost(message, optional, tag = "16")]
+            pub archive: ::core::option::Option<Archive>,
+            /// 23 on /details.
+            #[prost(bool, tag = "20")]
+            pub licensing_flag: bool,
+            /// 24 on /details.
+            #[prost(message, optional, tag = "21")]
+            pub anti_tamper: ::core::option::Option<AntiTamper>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Device {
+            #[prost(string, tag = "1")]
+            pub required_os: ::prost::alloc::string::String,
+            #[prost(string, tag = "2")]
+            pub name: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Compatibility {
+            #[prost(message, repeated, tag = "1")]
+            pub device: ::prost::alloc::vec::Vec<Device>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct EditorsChoice {
+            #[prost(string, repeated, tag = "1")]
+            pub bulletins: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+            #[prost(string, tag = "2")]
+            pub award: ::prost::alloc::string::String,
+            #[prost(string, tag = "3")]
+            pub title: ::prost::alloc::string::String,
+            #[prost(string, tag = "4")]
+            pub subtitle: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct UpdateInfo {
+            #[prost(string, tag = "1")]
+            pub changelog: ::prost::alloc::string::String,
+            #[prost(string, tag = "2")]
+            pub last_updated: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct LaunchInfo {
+            #[prost(string, tag = "1")]
+            pub launch_date: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "2")]
+            pub timestamp: ::core::option::Option<super::super::Timestamp>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Downloads {
+            #[prost(string, tag = "1")]
+            pub label_long: ::prost::alloc::string::String,
+            #[prost(int64, tag = "2")]
+            pub count_rounded: i64,
+            #[prost(int64, tag = "3")]
+            pub count_exact: i64,
+            #[prost(string, tag = "5")]
+            pub label_abbreviated: ::prost::alloc::string::String,
+            #[prost(string, tag = "6")]
+            pub label_short: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct InAppPurchases {
+            #[prost(string, tag = "2")]
+            pub price_range: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct AppLaunch {
+            #[prost(string, tag = "1")]
+            pub name: ::prost::alloc::string::String,
+            #[prost(string, tag = "2")]
+            pub intent_action: ::prost::alloc::string::String,
+            #[prost(string, tag = "3")]
+            pub intent_activity: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct TopChartInfo {
+            #[prost(string, tag = "1")]
+            pub title: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "2")]
+            pub link: ::core::option::Option<super::super::StreamTagMetadata>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct PermissionWrapper {
+            #[prost(message, repeated, tag = "1")]
+            pub permissions: ::prost::alloc::vec::Vec<super::super::StringWrapper>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct VersionInfo {
+            #[prost(int64, tag = "1")]
+            pub version_code: i64,
+            #[prost(string, tag = "2")]
+            pub version_string: ::prost::alloc::string::String,
+            #[prost(int32, tag = "3")]
+            pub offer_type: i32,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct DeletionLinks {
+            #[prost(string, tag = "1")]
+            pub account_deletion_url: ::prost::alloc::string::String,
+            #[prost(string, tag = "2")]
+            pub data_deletion_url: ::prost::alloc::string::String,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct DeletionUrls {
+            #[prost(message, optional, tag = "3")]
+            pub links: ::core::option::Option<DeletionLinks>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct DataDeletion {
+            #[prost(message, optional, tag = "3")]
+            pub urls: ::core::option::Option<DeletionUrls>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct DataDeletionWrapper {
+            #[prost(message, optional, tag = "1")]
+            pub deletion: ::core::option::Option<DataDeletion>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct CertificateData {
+            #[prost(bytes = "vec", tag = "1")]
+            pub encoded: ::prost::alloc::vec::Vec<u8>,
+            #[prost(bytes = "vec", tag = "2")]
+            pub public_key: ::prost::alloc::vec::Vec<u8>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct Signer {
+            #[prost(message, optional, tag = "1")]
+            pub certificate: ::core::option::Option<CertificateData>,
+            #[prost(int32, tag = "3")]
+            pub scheme: i32,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct Signers {
+            #[prost(message, repeated, tag = "1")]
+            pub signer: ::prost::alloc::vec::Vec<Signer>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct SigningInfo {
+            #[prost(message, optional, tag = "1")]
+            pub signers: ::core::option::Option<Signers>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct ContainsAds {}
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct PlayGames {
+            #[prost(uint32, tag = "1")]
+            pub enabled: u32,
+            #[prost(uint32, tag = "3")]
+            pub third: u32,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct CommunityVideos {
+            #[prost(message, repeated, tag = "1")]
+            pub videos: ::prost::alloc::vec::Vec<super::CommunityVideo>,
+        }
+    }
+    /// Play's own client turns every ApkInfo here into one entry of /details' AppDetails.file
+    /// (FileMetadata) and reads the rest as the /details fields named below.
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct ApkMetadataWrapper {
+        #[prost(message, optional, tag = "1")]
+        pub metadata: ::core::option::Option<apk_metadata_wrapper::ApkMetadata>,
+        #[prost(message, optional, tag = "2")]
+        pub main_obb: ::core::option::Option<apk_metadata_wrapper::ApkInfo>,
+        #[prost(message, optional, tag = "3")]
+        pub patch_obb: ::core::option::Option<apk_metadata_wrapper::ApkInfo>,
+        /// AppDetails.infoDownloadSize (9) on /details.
+        #[prost(int64, tag = "4")]
+        pub total_size: i64,
+        /// AppDetails 74 on /details.
+        #[prost(message, optional, tag = "5")]
+        pub badge_logs: ::core::option::Option<apk_metadata_wrapper::BadgeLogs>,
+    }
+    /// Nested message and enum types in `ApkMetadataWrapper`.
+    pub mod apk_metadata_wrapper {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct PatchInfo {
+            #[prost(int32, tag = "1")]
+            pub base_version_code: i32,
+            #[prost(int64, tag = "2")]
+            pub size: i64,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct ApkInfo {
+            #[prost(int64, tag = "1")]
+            pub version_code: i64,
+            #[prost(int64, tag = "2")]
+            pub size: i64,
+            #[prost(int64, tag = "3")]
+            pub size_compressed: i64,
+            #[prost(message, optional, tag = "4")]
+            pub patch: ::core::option::Option<PatchInfo>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct SplitHotfix {
+            #[prost(int32, tag = "1")]
+            pub sdk_split_hotfix_version: i32,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct SplitApk {
+            #[prost(string, tag = "1")]
+            pub split_name: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "2")]
+            pub info: ::core::option::Option<ApkInfo>,
+            #[prost(message, optional, tag = "3")]
+            pub dex_metadata: ::core::option::Option<ApkInfo>,
+            #[prost(message, optional, tag = "4")]
+            pub hotfix: ::core::option::Option<SplitHotfix>,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct AssetPack {
+            #[prost(string, tag = "1")]
+            pub name: ::prost::alloc::string::String,
+            #[prost(message, optional, tag = "2")]
+            pub info: ::core::option::Option<ApkInfo>,
+            #[prost(int64, tag = "3")]
+            pub version: i64,
+        }
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct ApkMetadata {
+            #[prost(message, optional, tag = "1")]
+            pub base_apk: ::core::option::Option<ApkInfo>,
+            #[prost(message, repeated, tag = "2")]
+            pub split_apks: ::prost::alloc::vec::Vec<SplitApk>,
+            #[prost(message, optional, tag = "3")]
+            pub dex_metadata: ::core::option::Option<ApkInfo>,
+            /// AppDetails.dependencies (34) fields 5 and 14 on /details.
+            #[prost(int32, tag = "4")]
+            pub derived_apk_id: i32,
+            #[prost(string, tag = "5")]
+            pub internal_sharing_id: ::prost::alloc::string::String,
+            #[prost(message, repeated, tag = "6")]
+            pub asset_packs: ::prost::alloc::vec::Vec<AssetPack>,
+            #[prost(int64, tag = "7")]
+            pub package_size: i64,
+        }
+        /// Play's generic server-logs cookie, which its client attaches to the details-page badge
+        /// it draws from this message.
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+        pub struct BadgeLogs {
+            #[prost(bytes = "vec", tag = "1")]
+            pub server_logs_cookie: ::prost::alloc::vec::Vec<u8>,
+        }
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Item {
+        #[prost(message, optional, tag = "2")]
+        pub metadata: ::core::option::Option<item::MetadataWrapper>,
+    }
+    /// Nested message and enum types in `Item`.
+    pub mod item {
+        #[allow(dead_code)]
+        #[derive(serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, PartialEq, ::prost::Message)]
+        pub struct MetadataWrapper {
+            #[prost(message, optional, tag = "1")]
+            pub package_name: ::core::option::Option<super::super::StringWrapper>,
+            #[prost(message, optional, tag = "2")]
+            pub regional_metadata: ::core::option::Option<super::RegionalMetadata>,
+            #[prost(message, optional, tag = "3")]
+            pub generic_metadata: ::core::option::Option<super::GenericMetadata>,
+        }
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Label {
+    #[prost(string, optional, tag = "1")]
+    pub title: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(message, optional, tag = "2")]
+    pub image: ::core::option::Option<Artwork>,
+    #[prost(string, optional, tag = "3")]
+    pub subtitle: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "4")]
+    pub subtitle_html: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(string, optional, tag = "8")]
+    pub description: ::core::option::Option<::prost::alloc::string::String>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Category {
+    #[prost(string, tag = "1")]
+    pub primary: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub secondary: ::prost::alloc::string::String,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Annotation {
+    #[prost(message, optional, tag = "29")]
+    pub content_rating: ::core::option::Option<Label>,
+    #[prost(message, optional, tag = "53")]
+    pub category: ::core::option::Option<Category>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StreamTagMetadata {
+    #[prost(message, optional, tag = "3")]
+    pub category_metadata: ::core::option::Option<stream_tag_metadata::CategoryMetadata>,
+    #[prost(message, optional, tag = "4")]
+    pub search_metadata: ::core::option::Option<stream_tag_metadata::SearchMetadata>,
+}
+/// Nested message and enum types in `StreamTagMetadata`.
+pub mod stream_tag_metadata {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct SearchMetadata {
+        #[prost(string, tag = "1")]
+        pub url: ::prost::alloc::string::String,
+        #[prost(string, tag = "2")]
+        pub query: ::prost::alloc::string::String,
+        #[prost(int32, tag = "3")]
+        pub unknown3: i32,
+        #[prost(int32, tag = "4")]
+        pub unknown4: i32,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct CategoryMetadata {
+        #[prost(string, tag = "1")]
+        pub url: ::prost::alloc::string::String,
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Tag {
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub metadata: ::core::option::Option<StreamTagMetadata>,
+    #[prost(string, tag = "3")]
+    pub category_id: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub genome_id: ::prost::alloc::string::String,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TagWrapper {
+    #[prost(message, repeated, tag = "1")]
+    pub type1: ::prost::alloc::vec::Vec<TagList>,
+    #[prost(message, repeated, tag = "2")]
+    pub type2: ::prost::alloc::vec::Vec<TagList>,
+    #[prost(message, repeated, tag = "3")]
+    pub type3: ::prost::alloc::vec::Vec<TagList>,
+    #[prost(message, repeated, tag = "4")]
+    pub type4: ::prost::alloc::vec::Vec<TagList>,
+    #[prost(message, repeated, tag = "5")]
+    pub type5: ::prost::alloc::vec::Vec<TagList>,
+    #[prost(message, repeated, tag = "6")]
+    pub type6: ::prost::alloc::vec::Vec<TagList>,
+    #[prost(message, repeated, tag = "7")]
+    pub type7: ::prost::alloc::vec::Vec<TagList>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TagList {
+    #[prost(message, repeated, tag = "1")]
+    pub tags: ::prost::alloc::vec::Vec<Tag>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ArtworkWrapper {
+    #[prost(message, optional, tag = "4")]
+    pub artwork: ::core::option::Option<Artwork>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Artwork {
+    #[prost(int32, tag = "1")]
+    pub artwork_type: i32,
+    #[prost(message, optional, tag = "2")]
+    pub dimensions: ::core::option::Option<artwork::Dimensions>,
+    #[prost(string, tag = "5")]
+    pub url: ::prost::alloc::string::String,
+    #[prost(string, tag = "6")]
+    pub alt_text: ::prost::alloc::string::String,
+    #[prost(string, tag = "7")]
+    pub https_url: ::prost::alloc::string::String,
+    #[prost(int32, tag = "8")]
+    pub sequence_position: i32,
+    #[prost(bool, tag = "9")]
+    pub is_fife_url_supported: bool,
+    #[prost(message, optional, tag = "10")]
+    pub citation: ::core::option::Option<artwork::Citation>,
+    #[prost(int32, tag = "14")]
+    pub duration_in_seconds: i32,
+    #[prost(string, tag = "15")]
+    pub fill_color_hex: ::prost::alloc::string::String,
+    #[prost(bool, tag = "16")]
+    pub is_autogenerated: bool,
+    #[prost(message, optional, tag = "17")]
+    pub attribution: ::core::option::Option<ArtworkAttribution>,
+    #[prost(string, tag = "19")]
+    pub background_color_hex: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "20")]
+    pub color_palette: ::core::option::Option<ColorPalette>,
+    #[prost(int32, tag = "21")]
+    pub device_type: i32,
+    #[prost(bool, tag = "22")]
+    pub is_fife_monogram_supported: bool,
+    #[prost(string, tag = "28")]
+    pub alternate_url: ::prost::alloc::string::String,
+}
+/// Nested message and enum types in `Artwork`.
+pub mod artwork {
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Copy, PartialEq, ::prost::Message)]
+    pub struct Dimensions {
+        #[prost(int32, tag = "3")]
+        pub width: i32,
+        #[prost(int32, tag = "4")]
+        pub height: i32,
+        #[prost(float, tag = "18")]
+        pub aspect_ratio: f32,
+    }
+    #[allow(dead_code)]
+    #[derive(serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+    pub struct Citation {
+        #[prost(string, tag = "11")]
+        pub title: ::prost::alloc::string::String,
+        #[prost(string, tag = "12")]
+        pub url: ::prost::alloc::string::String,
+    }
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ArtworkAttribution {
+    #[prost(string, tag = "1")]
+    pub source_name: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub source_url: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub license_name: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub license_url: ::prost::alloc::string::String,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct ColorPalette {
+    #[prost(string, tag = "1")]
+    pub light_vibrant: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub vibrant: ::prost::alloc::string::String,
+    #[prost(string, tag = "3")]
+    pub dark_vibrant: ::prost::alloc::string::String,
+    #[prost(string, tag = "4")]
+    pub light_muted: ::prost::alloc::string::String,
+    #[prost(string, tag = "5")]
+    pub muted: ::prost::alloc::string::String,
+    #[prost(string, tag = "6")]
+    pub dark_muted: ::prost::alloc::string::String,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct StringWrapper {
+    #[prost(string, tag = "1")]
+    pub data: ::prost::alloc::string::String,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct UrlWrapper {
+    #[prost(string, tag = "1")]
+    pub url: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub id: ::prost::alloc::string::String,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct Timestamp {
+    #[prost(uint64, tag = "1")]
+    pub seconds: u64,
+    #[prost(uint32, tag = "2")]
+    pub nanos: u32,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TimestampWrapper {
+    #[prost(message, optional, tag = "1")]
+    pub timestamp: ::core::option::Option<Timestamp>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TimestampEntry {
+    #[prost(string, tag = "1")]
+    pub entry: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub timestamp: ::core::option::Option<Timestamp>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TimestampEntryWrapper {
+    #[prost(string, tag = "1")]
+    pub android_id: ::prost::alloc::string::String,
+    #[prost(message, optional, tag = "2")]
+    pub entry: ::core::option::Option<TimestampEntry>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct NestedTimestamp {
+    #[prost(message, optional, tag = "1")]
+    pub wrapper: ::core::option::Option<TimestampWrapper>,
+    #[prost(message, optional, tag = "2")]
+    pub timestamp: ::core::option::Option<Timestamp>,
+}
+#[allow(dead_code)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct TimestampContainer {
+    #[prost(message, optional, tag = "3")]
+    pub entry_wrapper: ::core::option::Option<TimestampEntryWrapper>,
+    #[prost(message, optional, tag = "6")]
+    pub nested_timestamp: ::core::option::Option<NestedTimestamp>,
 }

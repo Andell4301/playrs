@@ -28,12 +28,21 @@ message AndroidAppDeliveryData {
   optional CompressedAppData compressed_app_data = 18;
   optional string sha256 = 19;
   optional DexMetadata dex_metadata = 21;
+  optional IncrementalSignatureData incremental_signature = 22;
+  optional bool read_log_logging_allowed = 24;
+  optional NuggetData nugget_data = 25;
+  optional string md5 = 26;
+  optional bool licensing_v2_enabled = 27;
+  optional ReadLogConfig read_log_config = 28;
+  optional int32 served_version_code = 29;
+  optional CompressedAppData alternate_compressed_app_data = 30;
 }
 
 message DexMetadata {
   optional int64 download_size = 1;
   optional string sha256 = 2;
   optional string download_url = 3;
+  optional CompressedAppData compressed_app_data = 5;
 }
 
 message SplitDeliveryData {
@@ -46,6 +55,10 @@ message SplitDeliveryData {
   optional AndroidAppPatchData patch_data = 7;
   optional CompressedAppData compressed_app_data = 8;
   optional string sha256 = 9;
+  optional DexMetadata dex_metadata = 11;
+  optional IncrementalSignatureData incremental_signature = 12;
+  optional string md5 = 15;
+  optional CompressedAppData alternate_compressed_app_data = 16;
 }
 
 message AndroidAppPatchData {
@@ -54,12 +67,15 @@ message AndroidAppPatchData {
   optional string download_url = 3;
   optional int32 patch_format = 4[default = 1];
   optional int64 max_patch_size = 5;
+  optional string base_version = 7;
+  optional string base_sha256 = 8;
 }
 
 message CompressedAppData{
   optional int64 type = 1;
   optional int64 size = 2;
   optional string download_url = 3;
+  repeated CompressedAppChunk chunk = 4;
 }
 
 message AppFileMetadata {
@@ -1034,6 +1050,9 @@ message AppDetails {
   optional string download_label = 78;
   optional Compatibility compatibility = 82;
   optional Support support = 86;
+  optional int64 download_count_exact = 70;
+  optional TeacherApprovalInfo teacher_approval = 65;
+  optional BadgeLogs badge_logs = 74;
 }
 
 message AppLaunch {
@@ -1053,6 +1072,8 @@ message TagGroup {
   optional TagType type4 = 4;
   optional TagType type5 = 5;
   optional TagType type6 = 6;
+  optional TagType type7 = 7;
+  optional TagType type9 = 9;
 }
 
 message TagType {
@@ -1130,17 +1151,38 @@ message Dependencies {
   optional int32  unknown2 = 5;
   repeated string split_apks = 11;
   repeated LibraryDependency library_dependency = 13;
+  repeated string installer_permissions = 6;
+  optional int32 android_category = 7;
+  optional int32 target_sandbox_version = 8;
+  optional int32 install_reason = 9;
+  optional int64 frosting_id = 10;
+  optional string internal_sharing_id = 14;
+  optional ModuleInstall module_install = 12;
+  repeated string asset_module_names = 15;
+  optional Unconfirmed16 unconfirmed16 = 16;
+  optional DeliveryToken delivery_token = 17;
+  optional Archive archive = 19;
+  optional Reinstall reinstall = 20;
+  repeated DependencySplit split = 22;
+  optional bool licensing_flag = 23;
+  optional AntiTamper anti_tamper = 24;
 }
 
 message Dependency {
   optional string package_name = 1;
   optional int32 version = 2;
   optional int32 unknown4 = 4;
+  optional bool is_optional = 5;
+  optional int32 type = 6;
+  repeated DependencyModule module = 7;
 }
 
 message LibraryDependency {
   optional string package_name = 1;
   optional int64 version_code = 2;
+  optional int32 type = 3;
+  optional int64 size = 4;
+  optional LibraryDetails details = 5;
 }
 
 
@@ -1173,6 +1215,9 @@ message FileMetadata {
   optional string split_id = 4;
   optional int64 compressed_size = 5;
   repeated PatchDetails patch_details = 6;
+  optional string asset_module_name = 7;
+  optional AssetModuleVersion asset_module_version = 8;
+  optional SplitHotfix split_hotfix = 9;
 }
 
 message SubscriptionDetails {
@@ -1233,6 +1278,8 @@ message Item {
   optional string review_questions_url = 34;
   optional string review_summary_url = 39;
   optional ContentRating content_rating = 50;
+  optional FamilyBadge family_badge = 48;
+  optional FamilyLibrary family_library = 47;
 }
 
 message ContentRating {
@@ -2275,4 +2322,173 @@ message ServerResponse {
     optional string message = 2;
   }
   optional Error error = 2;
+}
+
+message CompressedAppChunk {
+  optional string download_url = 1;
+  optional string field2 = 2;
+  optional int64 size = 3;
+}
+
+message MerkleTreeData {
+  optional string download_url = 1;
+  optional int64 size = 2;
+  optional string sha256 = 3;
+}
+
+message IncrementalSignatureData {
+  optional MerkleTreeData merkle_tree = 1;
+  optional bytes v4_signature = 2;
+}
+
+message NuggetFileData {
+  optional string download_url = 1;
+  optional int64 size = 2;
+  optional string sha256 = 3;
+  optional CompressedAppData compressed_app_data = 4;
+}
+
+message NuggetData {
+  repeated string idle_nugget_file_sha256 = 1;
+  optional NuggetFileData idle_nugget = 2;
+  optional NuggetFileData rest_nugget = 3;
+}
+
+message ReadLogConfig {
+  optional int64 field1 = 1;
+  optional int32 digest_behavior = 2;
+  optional double sample_rate = 3;
+  optional bool marked_for_removal = 4;
+}
+
+message FamilyBadge {
+  message BadgeImage {
+    message Url {
+      optional string url = 1;
+    }
+    optional int32 type = 2;
+    optional Url image = 6;
+    optional Url image_alt = 7;
+  }
+
+  message Link {
+    message Target {
+      message Destination {
+        optional string url = 1;
+      }
+      optional Destination destination = 3;
+    }
+    optional int32 age_bucket = 1;
+    optional Target target = 2;
+  }
+
+  optional string age_label = 1;
+  optional string age_label_long = 2;
+  optional string description = 3;
+  optional BadgeImage image = 4;
+  optional int32 state = 5;
+  repeated Link links = 7;
+}
+
+message TeacherApprovalInfo {
+  message Group {
+    optional string title = 1;
+    repeated string values = 2;
+  }
+
+  message ArtworkUrl {
+    optional string url = 1;
+  }
+
+  message ApprovalArtwork {
+    optional ArtworkUrl image = 6;
+  }
+
+  message Note {
+    optional string heading = 1;
+    optional string body = 2;
+  }
+
+  message Notes {
+    optional string title = 1;
+    repeated Note notes = 2;
+  }
+
+  optional Group group1 = 1;
+  optional Group group2 = 2;
+  optional Group group3 = 3;
+  optional Group group4 = 4;
+  optional Group group5 = 5;
+  optional Group group6 = 6;
+  optional string title = 7;
+  optional string subtitle = 8;
+  optional ApprovalArtwork artwork = 9;
+  optional Notes notes = 10;
+}
+
+message FamilyLibrary {
+  optional string html = 1;
+}
+
+message ModuleInstall {
+  optional bool should_stage = 2;
+  optional bool enable_rollback = 3;
+  optional bool is_apex = 4;
+}
+
+message Unconfirmed16 {
+  optional bool flag1 = 1;
+  optional bool flag2 = 3;
+  optional float value5 = 5;
+  optional int32 value6 = 6;
+}
+
+message DeliveryToken {
+  optional string token = 1;
+}
+
+message Archive {
+  optional int32 derived_apk_id = 1;
+}
+
+message AntiTamper {
+  optional bool transfer_key = 1;
+}
+
+message DependencyModule {
+  optional string name = 1;
+  optional int64 version_code = 2;
+  optional int32 type = 3;
+}
+
+message DependencySplit {
+  optional string name = 1;
+  optional int32 sdk_split_hotfix_version = 2;
+}
+
+message Reinstall {
+  optional int32 behavior = 1;
+  optional int64 unconfirmed2 = 2;
+}
+
+message LibraryDetails {
+  optional SdkLibrary sdk = 1;
+}
+
+message SdkLibrary {
+  optional int64 size = 1;
+  optional int32 version_major = 2;
+  optional int32 unconfirmed3 = 3;
+}
+
+message AssetModuleVersion {
+  optional int64 version = 1;
+}
+
+message SplitHotfix {
+  optional int32 sdk_split_hotfix_version = 1;
+}
+
+message BadgeLogs {
+  optional bytes server_logs_cookie = 1;
 }

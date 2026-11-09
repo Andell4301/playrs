@@ -146,19 +146,18 @@ impl GooglePlayApi {
         ]);
 
         let mut headers = self.get_auth_headers()?;
-        headers.extend([
-            (HeaderName::from_static("app"), HeaderValue::from_str(DEFAULT_ANDROID_VENDING_APP)?),
-            (HeaderName::from_static("content-type"), HeaderValue::from_static("application/x-www-form-urlencoded")),
-        ]);
+        headers.insert(HeaderName::from_static("app"), HeaderValue::from_str(DEFAULT_ANDROID_VENDING_APP)?);
 
-        let resp = self.post_form(URL_AUTH, headers, params).await?;
+        let resp = self.post_auth(URL_AUTH, headers, params).await?;
         let bytes = resp.bytes().await?;
-        let parsed = Self::parse_form_response(&bytes);
+        let parsed = Self::parse_auth_response(&bytes);
 
-        match parsed.get("Token") {
-            Some(token) => Ok(token.to_string()),
-            None => Err(PlayError::AuthenticationError("Failed to generate AAS token: 'Token' not found in response".to_string())),
-        }
+        parsed
+            .get("Token")
+            .filter(|token| !token.is_empty())
+            .or_else(|| parsed.get("Auth").filter(|token| !token.is_empty()))
+            .cloned()
+            .ok_or_else(|| PlayError::AuthenticationError("Failed to generate AAS token".to_string()))
     }
 
     pub(crate) async fn generate_token(&self, service: TokenService) -> Result<String, PlayError> {
@@ -200,8 +199,11 @@ impl GooglePlayApi {
             TokenService::ExperimentalConfig => {
                 params.insert("service".to_string(), format!("oauth2:https://www.googleapis.com/auth/{service}"));
             }
-            TokenService::Numberer | TokenService::GCM | TokenService::GooglePlay => {
+            TokenService::Numberer | TokenService::GCM => {
                 params.insert("app".to_string(), DEFAULT_ANDROID_VENDING_PACKAGE.to_string());
+                params.insert("service".to_string(), format!("oauth2:https://www.googleapis.com/auth/{service}"));
+            }
+            TokenService::GooglePlay => {
                 params.insert("service".to_string(), format!("oauth2:https://www.googleapis.com/auth/{service}"));
             }
             TokenService::Android => {
@@ -209,9 +211,9 @@ impl GooglePlayApi {
             }
         }
 
-        let resp = self.post_form(URL_AUTH, headers, params).await?;
+        let resp = self.post_auth(URL_AUTH, headers, params).await?;
         let bytes = resp.bytes().await?;
-        let parsed = Self::parse_form_response(&bytes);
+        let parsed = Self::parse_auth_response(&bytes);
 
         match parsed.get("Auth") {
             Some(token) => Ok(token.to_string()),
@@ -243,7 +245,7 @@ impl GooglePlayApi {
             (HeaderName::from_static("x-dfe-content-filters"), HeaderValue::from_static("")),
             (HeaderName::from_static("x-limit-ad-tracking-enabled"), HeaderValue::from_static("false")),
             (HeaderName::from_static("x-ad-id"), HeaderValue::from_static("")),
-            (HeaderName::from_static("x-dfe-userlanguages"), HeaderValue::from_str(&self.device.locale())?),
+            (HeaderName::from_static("x-dfe-userlanguages"), HeaderValue::from_str(&self.device.user_languages())?),
             (HeaderName::from_static("x-dfe-request-params"), HeaderValue::from_static("timeoutMs=4000")),
         ]);
 
@@ -306,7 +308,7 @@ impl GooglePlayApi {
     pub(crate) async fn check_in(&self) -> Result<AndroidCheckinResponse, PlayError> {
         debug!("device check-in");
         let mut headers = self.get_auth_headers()?;
-        headers.extend([(HeaderName::from_static("content-type"), HeaderValue::from_static("application/x-protobuf"))]);
+        headers.extend([(HeaderName::from_static("content-type"), HeaderValue::from_static("application/x-protobuffer"))]);
         let checkin_request = self.device.generate_android_checkin_request();
         let encoded = checkin_request.encode_to_vec();
         let result: AndroidCheckinResponse = self.post_play_proto(URL_CHECK_IN, headers, None, Some(encoded)).await?;

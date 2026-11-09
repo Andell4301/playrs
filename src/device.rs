@@ -146,6 +146,11 @@ impl Device {
         self.locale.to_string()
     }
 
+    pub(crate) fn user_languages(&self) -> String {
+        // DFE's locale list uses language_COUNTRY even for script-qualified locales.
+        format!("{}_{}", self.locale.language, self.locale.country)
+    }
+
     pub fn properties(&self) -> &HashMap<String, String> {
         &self.properties
     }
@@ -421,5 +426,47 @@ impl Device {
             user_name: None,
             user_serial_number: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Device, list_devices};
+
+    #[test]
+    fn googlebook_profiles_load_with_unescaped_fingerprints() {
+        let profiles = [
+            ("acer_googlebook_14_moonstone", "moonstone"),
+            ("asus_googlebook_14_lapis", "lapis"),
+            ("dell_xps_googlebook_mica", "mica"),
+            ("hp_googlebook_14_quartz", "quartz"),
+            ("lenovo_googlebook_15_ruby", "ruby"),
+        ];
+        let available = list_devices();
+
+        for (profile, expected_device) in profiles {
+            assert!(available.iter().any(|name| name == profile));
+            let device = Device::new(Some(profile), Some("en-US")).expect("Googlebook profile should load");
+            let request = device.generate_android_checkin_request();
+            let build = request.checkin.expect("checkin should exist").build.expect("build should exist");
+            assert_eq!(build.device.as_deref(), Some(expected_device));
+            let fingerprint = build.id.expect("fingerprint should exist");
+            assert!(fingerprint.contains(":17/"));
+            assert!(!fingerprint.contains('\\'));
+            assert!(device.device_configuration().system_available_feature.iter().any(|feature| feature == "android.hardware.type.pc"));
+        }
+    }
+
+    #[test]
+    fn user_languages_omit_script_and_keep_country() {
+        let device = Device::new(None::<String>, Some("zh-Hans-CN")).expect("script locale should load");
+        assert_eq!(device.user_languages(), "zh_CN");
+        assert_eq!(device.locale().replace('_', "-"), "zh-Hans-CN");
+    }
+
+    #[test]
+    fn user_languages_keep_regular_locale() {
+        let device = Device::new(None::<String>, Some("en-US")).expect("locale should load");
+        assert_eq!(device.user_languages(), "en_US");
     }
 }
