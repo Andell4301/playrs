@@ -31,13 +31,27 @@ pub enum PlayError {
     #[error("Device error: {0}")]
     DeviceError(#[from] DeviceError),
     #[error("HTTP request error: {0}")]
-    ReqwestError(#[from] ReqwestError),
+    ReqwestError(#[source] ReqwestError),
+    #[error("{method} {route} failed: {source}")]
+    HttpRequestError {
+        method: &'static str,
+        route: String,
+        #[source]
+        source: ReqwestError,
+    },
     #[error("Header error: {0}")]
     HeaderError(#[from] InvalidHeaderValue),
     #[error("I/O error: {0}")]
     IoError(#[from] IoError),
     #[error("Protobuf decode error: {0}")]
     ProtobufDecodeError(#[from] ProtobufDecodeError),
+    #[error("{method} {route} returned invalid protobuf: {source}")]
+    ProtobufResponseError {
+        method: &'static str,
+        route: String,
+        #[source]
+        source: ProtobufDecodeError,
+    },
     #[error("ZIP error: {0}")]
     ZipError(#[from] ZipError),
     #[error("Authentication error: {0}")]
@@ -56,4 +70,45 @@ pub enum PlayError {
     PurchaseError(String),
     #[error("Failed to add or edit review")]
     ReviewError,
+}
+
+impl PlayError {
+    pub(crate) fn http_request(method: &'static str, route: impl Into<String>, source: ReqwestError) -> Self {
+        Self::HttpRequestError { method, route: route.into(), source: source.without_url() }
+    }
+
+    pub(crate) fn http_status(&self) -> Option<StatusCode> {
+        match self {
+            Self::ReqwestError(source) | Self::HttpRequestError { source, .. } => source.status(),
+            Self::HttpStatusError(status) => Some(*status),
+            _ => None,
+        }
+    }
+}
+
+impl From<ReqwestError> for PlayError {
+    fn from(source: ReqwestError) -> Self {
+        Self::ReqwestError(source.without_url())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::PlayError;
+
+    #[test]
+    fn reqwest_errors_drop_the_url() {
+        let secret = "delivery-token-that-must-not-leak";
+        let url = reqwest::Url::parse(&format!("https://example.invalid/delivery?dtok={secret}")).expect("failed to build test URL");
+        let source = reqwest::Client::new()
+            .get("https://example.invalid")
+            .header("invalid\nheader", "value")
+            .build()
+            .expect_err("invalid header should fail")
+            .with_url(url);
+        let error = PlayError::from(source);
+
+        assert!(!error.to_string().contains(secret));
+        assert!(!format!("{error:?}").contains(secret));
+    }
 }

@@ -14,9 +14,10 @@ use crate::playproto::{AcceptTosResponse, AndroidCheckinResponse, TocResponse, U
 use indexmap::IndexMap;
 use prost::Message;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use tracing::{debug, info};
+use std::fmt;
+use tracing::{debug, info, instrument};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Default)]
 pub struct AuthData {
     pub(crate) email: Option<String>,
     pub(crate) aas_token: Option<String>,
@@ -31,6 +32,55 @@ pub struct AuthData {
     pub(crate) gcm_token: Option<String>,
     pub(crate) dfe_cookie: Option<String>,
 }
+
+const TOKEN_PREVIEW_EDGE_CHARS: usize = 3;
+const TOKEN_PREVIEW_MIN_CHARS: usize = 12;
+
+fn token_preview(value: &str) -> String {
+    let length = value.chars().count();
+    if length < TOKEN_PREVIEW_MIN_CHARS || !value.bytes().all(|byte| byte.is_ascii_graphic()) {
+        return "<redacted>".to_string();
+    }
+
+    let prefix: String = value.chars().take(TOKEN_PREVIEW_EDGE_CHARS).collect();
+    let suffix: String = value.chars().skip(length - TOKEN_PREVIEW_EDGE_CHARS).collect();
+    format!("{prefix}…{suffix}")
+}
+
+impl fmt::Debug for AuthData {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn redacted(value: &Option<String>) -> Option<&'static str> {
+            value.as_ref().map(|_| "<redacted>")
+        }
+
+        fn preview(value: &Option<String>) -> Option<String> {
+            value.as_deref().map(token_preview)
+        }
+
+        formatter
+            .debug_struct("AuthData")
+            .field("email", &redacted(&self.email))
+            .field("aas_token", &preview(&self.aas_token))
+            .field("gsf_id", &redacted(&self.gsf_id))
+            .field("auth_token", &preview(&self.auth_token))
+            .field("oauth_login_token", &preview(&self.oauth_login_token))
+            .field("ac2dm_token", &preview(&self.ac2dm_token))
+            .field("android_check_in_token", &preview(&self.android_check_in_token))
+            .field("device_check_in_consistency_token", &preview(&self.device_check_in_consistency_token))
+            .field("device_config_token", &preview(&self.device_config_token))
+            .field("experiments_config_token", &preview(&self.experiments_config_token))
+            .field("gcm_token", &preview(&self.gcm_token))
+            .field("dfe_cookie", &redacted(&self.dfe_cookie))
+            .finish()
+    }
+}
+
+fn sensitive_header_value(value: &str) -> Result<HeaderValue, PlayError> {
+    let mut value = HeaderValue::from_str(value)?;
+    value.set_sensitive(true);
+    Ok(value)
+}
+
 impl AuthData {
     pub fn get_email(&self) -> Option<&str> {
         self.email.as_deref()
@@ -75,7 +125,7 @@ impl AuthData {
 
 impl GooglePlayApi {
     pub(crate) async fn generate_aas_token(&self) -> Result<String, PlayError> {
-        debug!("Requesting AAS token from OAuth login token...");
+        debug!("requesting AAS token");
         let Some(token) = self.auth_data.oauth_login_token.as_deref() else {
             return Err(PlayError::AuthenticationError("Cannot generate AAS token without OAuth login token".to_string()));
         };
@@ -112,7 +162,7 @@ impl GooglePlayApi {
     }
 
     pub(crate) async fn generate_token(&self, service: TokenService) -> Result<String, PlayError> {
-        debug!("Requesting token for service {service}...");
+        debug!(service = %service, "requesting token");
         let Some(aas_token) = self.auth_data.aas_token.as_deref() else {
             return Err(PlayError::AuthenticationError("AAS token is required to generate service tokens".to_string()));
         };
@@ -179,12 +229,12 @@ impl GooglePlayApi {
         let mut headers = HeaderMap::new();
 
         if let Some(auth_token) = self.auth_data.auth_token.as_deref() {
-            headers.insert("Authorization", HeaderValue::from_str(&format!("Bearer {auth_token}"))?);
+            headers.insert("Authorization", sensitive_header_value(&format!("Bearer {auth_token}"))?);
         }
 
         headers.extend([
             (HeaderName::from_static("user-agent"), HeaderValue::from_str(&self.device.user_agent_string())?),
-            (HeaderName::from_static("x-dfe-device-id"), HeaderValue::from_str(gsf_id)?),
+            (HeaderName::from_static("x-dfe-device-id"), sensitive_header_value(gsf_id)?),
             (HeaderName::from_static("accept-language"), HeaderValue::from_str(&self.device.locale().replace('_', "-"))?),
             (HeaderName::from_static("x-dfe-encoded-targets"), HeaderValue::from_static(DEFAULT_DFE_TARGETS)),
             (HeaderName::from_static("x-dfe-phenotype"), HeaderValue::from_static(DEFAULT_DFE_PHENOTYPE)),
@@ -198,15 +248,15 @@ impl GooglePlayApi {
         ]);
 
         if let Some(consistency_token) = self.auth_data.device_check_in_consistency_token.as_deref() {
-            headers.insert("x-dfe-device-checkin-consistency-token", HeaderValue::from_str(consistency_token)?);
+            headers.insert("x-dfe-device-checkin-consistency-token", sensitive_header_value(consistency_token)?);
         }
 
         if let Some(device_config_token) = self.auth_data.device_config_token.as_deref() {
-            headers.insert("x-dfe-device-config-token", HeaderValue::from_str(device_config_token)?);
+            headers.insert("x-dfe-device-config-token", sensitive_header_value(device_config_token)?);
         }
 
         if let Some(dfe_cookie) = self.auth_data.dfe_cookie.as_deref() {
-            headers.insert("x-dfe-cookie", HeaderValue::from_str(dfe_cookie)?);
+            headers.insert("x-dfe-cookie", sensitive_header_value(dfe_cookie)?);
         }
 
         headers.insert("x-dfe-mccmnc", HeaderValue::from_str(&self.device.mcc_mnc())?);
@@ -222,7 +272,7 @@ impl GooglePlayApi {
         ]);
 
         if let Some(gsf_id) = self.auth_data.gsf_id.as_deref() {
-            headers.insert("device", HeaderValue::from_str(gsf_id)?);
+            headers.insert("device", sensitive_header_value(gsf_id)?);
         }
 
         Ok(headers)
@@ -254,7 +304,7 @@ impl GooglePlayApi {
 
 impl GooglePlayApi {
     pub(crate) async fn check_in(&self) -> Result<AndroidCheckinResponse, PlayError> {
-        debug!("Performing device check-in...");
+        debug!("device check-in");
         let mut headers = self.get_auth_headers()?;
         headers.extend([(HeaderName::from_static("content-type"), HeaderValue::from_static("application/x-protobuf"))]);
         let checkin_request = self.device.generate_android_checkin_request();
@@ -264,7 +314,7 @@ impl GooglePlayApi {
     }
 
     pub(crate) async fn upload_device_config(&self) -> Result<UploadDeviceConfigResponse, PlayError> {
-        debug!("Uploading device configuration...");
+        debug!("uploading device config");
         let mut headers = self.get_default_headers()?;
         headers.insert(HeaderName::from_static("content-type"), HeaderValue::from_static("application/x-protobuf"));
         let request_proto = UploadDeviceConfigRequest {
@@ -279,7 +329,7 @@ impl GooglePlayApi {
 
     #[allow(dead_code)]
     pub(crate) async fn toc(&self) -> Result<TocResponse, PlayError> {
-        debug!("Checking Terms of Service...");
+        debug!("checking terms of service");
         let headers = self.get_default_headers()?;
         let proto_resp = self.get_play_wrapper_resp(URL_TOC, headers, None).await?;
         let toc_response = get_payload_field!(proto_resp, toc_response)?;
@@ -291,7 +341,7 @@ impl GooglePlayApi {
 
     #[allow(dead_code)]
     pub(crate) async fn accept_tos(&self, tos_token: &str) -> Result<AcceptTosResponse, PlayError> {
-        debug!("Accepting Terms of Service...");
+        debug!("accepting terms of service");
         let headers = self.get_default_headers()?;
         let params = IndexMap::from([("tost".to_string(), tos_token.to_string()), ("toscme".to_string(), "false".to_string())]);
         let proto_resp = self.post_play_wrapper_resp(URL_TOS_ACCEPT, headers, Some(params), None).await?;
@@ -300,13 +350,12 @@ impl GooglePlayApi {
 }
 
 impl GooglePlayApi {
+    #[instrument(name = "auth_setup", level = "info", skip(self))]
     pub async fn setup(&mut self, force: bool) -> Result<(), PlayError> {
-        info!("Setting up Google Play authentication...");
-        if !force {
-            if let (Some(_), Some(_)) = (&self.auth_data.gsf_id, &self.auth_data.auth_token) {
-                debug!("Using provided GSF ID and auth token, skipping authentication");
-                return Ok(());
-            }
+        info!("auth setup started");
+        if !force && let (Some(_), Some(_)) = (&self.auth_data.gsf_id, &self.auth_data.auth_token) {
+            info!(reused = true, "auth ready");
+            return Ok(());
         }
 
         if let (Some(_), Some(_), None) = (&self.auth_data.email, &self.auth_data.oauth_login_token, &self.auth_data.aas_token) {
@@ -339,7 +388,7 @@ impl GooglePlayApi {
                 let auth_token = self.generate_token(TokenService::GooglePlay).await?;
                 self.auth_data.auth_token = Some(auth_token);
             }
-            (None, Some(_)) => debug!("No AAS token, keeping the provided auth token"),
+            (None, Some(_)) => debug!("using supplied auth token"),
             (None, None) => return Err(PlayError::AuthenticationError("Setup requires either an AAS token or an auth token".to_string())),
         }
 
@@ -350,7 +399,27 @@ impl GooglePlayApi {
         //     self.auth_data.dfe_cookie = Some(cookie);
         // }
 
-        info!("Authenticated!");
+        info!(reused = false, "auth ready");
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{sensitive_header_value, token_preview};
+
+    #[test]
+    fn secret_headers_are_marked_sensitive() {
+        let value = sensitive_header_value("secret").expect("failed to build test header");
+        assert!(value.is_sensitive());
+        assert_eq!(format!("{value:?}"), "Sensitive");
+    }
+
+    #[test]
+    fn token_previews_keep_only_the_edges() {
+        assert_eq!(token_preview("abcdefghijklmnopqrstuvwxyz"), "abc…xyz");
+        assert_eq!(token_preview("short"), "<redacted>");
+        assert_eq!(token_preview("abc\ndefghijklmnop"), "<redacted>");
+        assert_eq!(token_preview("åßçdefghi界語字"), "<redacted>");
     }
 }

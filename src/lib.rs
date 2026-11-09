@@ -21,7 +21,7 @@ use constants::{
 };
 use device::Device;
 use error::PlayError;
-use http::get_payload_field;
+use http::{get_payload_field, next_request_id};
 use indexmap::IndexMap;
 use playproto::{
     AcquireRequest, AcquireResponseWrapper, BrowseResponse, BulkDetailsEntry, BulkDetailsRequest, DeliveryResponse, DetailsResponse, Field, Item,
@@ -38,12 +38,29 @@ use reqwest::{
 };
 use serde::Serialize;
 use serde_json::Value;
+use std::fmt;
 use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 use tokio::task;
-use tracing::{debug, info, warn};
+use tracing::{debug, field, info, warn};
 use zip::ZipWriter;
 use zip::write::SimpleFileOptions;
+
+fn elapsed_ms(started_at: Instant) -> u64 {
+    started_at.elapsed().as_millis().try_into().unwrap_or(u64::MAX)
+}
+
+fn validate_download_size(expected: i64, actual: usize) -> Result<(), PlayError> {
+    let expected =
+        usize::try_from(expected).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidData, format!("invalid download size: {expected}")))?;
+    if expected != actual {
+        return Err(
+            std::io::Error::new(std::io::ErrorKind::InvalidData, format!("download size mismatch: expected {expected} bytes, got {actual}")).into()
+        );
+    }
+    Ok(())
+}
 
 pub trait MessageJsonExt {
     fn to_json_value(&self) -> Result<Value, PlayError>;
@@ -58,12 +75,24 @@ where
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct PlayFile {
     name: String,
     url: String,
     size: i64,
     file_type: PlayFileType,
+}
+
+impl fmt::Debug for PlayFile {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("PlayFile")
+            .field("name", &self.name)
+            .field("url", &"<redacted>")
+            .field("size", &self.size)
+            .field("file_type", &self.file_type)
+            .finish()
+    }
 }
 
 pub struct GooglePlayApi {
@@ -208,17 +237,43 @@ impl GooglePlayApi {
 // Public API Methods
 impl GooglePlayApi {
     pub async fn get_user_profile(&self) -> Result<Option<UserProfile>, PlayError> {
+        let method = "GET";
+        let route = "/fdfe/api/userProfile";
+        let started_at = Instant::now();
+        let request_id = next_request_id();
         let headers = self.get_default_headers()?;
-        let response = self.client.get(URL_USER_PROFILE).headers(headers).send().await?;
+        debug!(http.method = method, http.route = route, request_id, "request");
+        let response =
+            self.client.get(URL_USER_PROFILE).headers(headers).send().await.map_err(|error| PlayError::http_request(method, route, error))?;
+        let status = response.status();
 
-        if response.status().is_success() {
-            let bytes = response.bytes().await?;
-            let wrapper = ResponseWrapperApi::decode(bytes.as_ref())?;
+        if status.is_success() {
+            let bytes = response.bytes().await.map_err(|error| PlayError::http_request(method, route, error))?;
+            debug!(
+                http.method = method,
+                http.route = route,
+                request_id,
+                http.status = status.as_u16(),
+                elapsed_ms = elapsed_ms(started_at),
+                response_bytes = bytes.len(),
+                "response"
+            );
+            let wrapper = ResponseWrapperApi::decode(bytes.as_ref()).map_err(|source| PlayError::ProtobufResponseError {
+                method,
+                route: route.to_owned(),
+                source,
+            })?;
             let user_profile_response = get_payload_field!(wrapper, user_profile_response)?;
             return Ok(user_profile_response.user_profile);
         }
 
-        Ok(None)
+        debug!(http.method = method, http.route = route, request_id, http.status = status.as_u16(), elapsed_ms = elapsed_ms(started_at), "response");
+        if status == reqwest::StatusCode::NOT_FOUND {
+            Ok(None)
+        } else {
+            response.error_for_status_ref().map_err(|error| PlayError::http_request(method, route, error))?;
+            Err(PlayError::HttpStatusError(status))
+        }
     }
 
     pub async fn get_app_details_by_package_name(&self, package_name: &str) -> Result<DetailsResponse, PlayError> {
@@ -310,6 +365,10 @@ impl GooglePlayApi {
     }
 
     pub async fn modify_wishlist(&self, action: ModifyWishlistAction, package_names: Vec<String>) -> Result<bool, PlayError> {
+        let method = "POST";
+        let route = "/fdfe/modifyLibrary";
+        let started_at = Instant::now();
+        let request_id = next_request_id();
         let headers = self.get_default_headers()?;
         let request = match action {
             ModifyWishlistAction::Add => {
@@ -319,8 +378,18 @@ impl GooglePlayApi {
                 ModifyLibraryRequest { library_id: Some("u-wl".to_owned()), add_package_name: vec![], remove_package_name: package_names }
             }
         };
-        let resp = self.client.post(URL_MODIFY_LIBRARY).headers(headers).body(request.encode_to_vec()).send().await?;
-        Ok(resp.status().is_success())
+        debug!(http.method = method, http.route = route, request_id, "request");
+        let response = self
+            .client
+            .post(URL_MODIFY_LIBRARY)
+            .headers(headers)
+            .body(request.encode_to_vec())
+            .send()
+            .await
+            .map_err(|error| PlayError::http_request(method, route, error))?;
+        let status = response.status();
+        debug!(http.method = method, http.route = route, request_id, http.status = status.as_u16(), elapsed_ms = elapsed_ms(started_at), "response");
+        Ok(status.is_success())
     }
 
     pub async fn get_reviews(&self, package_name: &str, review_filter: ReviewFilter, result_num: u32) -> Result<ReviewResponse, PlayError> {
@@ -458,8 +527,13 @@ impl GooglePlayApi {
             IndexMap::from([("c".to_owned(), "3".to_owned()), ("stcid".to_owned(), chart.to_owned()), ("scat".to_owned(), category.to_owned())]);
         match self.get_play_wrapper_resp(URL_TOP_CHART, headers, Some(params)).await {
             Ok(response) => get_payload_field!(response, list_response).map(Some),
-            Err(PlayError::HttpStatusError(status)) if status.is_client_error() => Ok(None),
-            Err(e) => Err(e),
+            Err(error) => match error.http_status() {
+                Some(status) if status.is_client_error() => {
+                    debug!(%status, "chart unavailable");
+                    Ok(None)
+                }
+                _ => Err(error),
+            },
         }
     }
 
@@ -551,6 +625,17 @@ impl GooglePlayApi {
         self.post_play_proto(URL_ACQUIRE, headers, None, Some(body)).await
     }
 
+    #[tracing::instrument(
+        name = "purchase",
+        level = "debug",
+        skip_all,
+        fields(
+            package_name = package_name,
+            version_code = version_code,
+            offer_type = offer_type,
+            status = field::Empty,
+        )
+    )]
     pub async fn purchase(
         &self,
         package_name: &str,
@@ -563,15 +648,15 @@ impl GooglePlayApi {
     ) -> Result<DeliveryResponse, PlayError> {
         // https://gitlab.com/AuroraOSS/gplayapi/-/commit/2180d4a50efac9b86f83e2bfb84db3366d41476d
         // dont care if this fails
-        if let Err(e) = self.acquire(&package_name, version_code, offer_type).await {
-            debug!("Acquire failed (non-fatal): {e}");
+        if let Err(e) = self.acquire(package_name, version_code, offer_type).await {
+            debug!(error = %e, "acquire failed; continuing");
         }
 
-        let delivery_token = self.get_delivery_token(&package_name, version_code, offer_type, certificate_hash).await?;
+        let delivery_token = self.get_delivery_token(package_name, version_code, offer_type, certificate_hash).await?;
 
         let delivery_response = self
             .get_delivery_response(
-                &package_name,
+                package_name,
                 version_code,
                 offer_type,
                 split_module,
@@ -582,8 +667,15 @@ impl GooglePlayApi {
             )
             .await?;
 
+        if let Some(status) = delivery_response.status {
+            tracing::Span::current().record("status", status);
+        }
+
         match delivery_response.status {
-            Some(1) => Ok(delivery_response),
+            Some(1) => {
+                debug!("purchase complete");
+                Ok(delivery_response)
+            }
             Some(2 | 9) => Err(PlayError::PurchaseError("App not supported for purchase".to_owned())),
             Some(3) => Err(PlayError::PurchaseError("App not purchased".to_owned())),
             Some(7) => Err(PlayError::PurchaseError("App removed from store".to_owned())),
@@ -591,6 +683,18 @@ impl GooglePlayApi {
         }
     }
 
+    #[tracing::instrument(
+        name = "download",
+        level = "info",
+        skip_all,
+        fields(
+            package_name = package_name,
+            version_code = field::Empty,
+            offer_type = field::Empty,
+            xapk = use_xapk,
+            include_dex = include_dex,
+        )
+    )]
     pub async fn download_app(
         &self,
         package_name: &str,
@@ -605,14 +709,15 @@ impl GooglePlayApi {
         custom_apk_name: Option<String>,
         include_dex: bool,
     ) -> Result<Vec<PathBuf>, PlayError> {
-        info!("Downloading {package_name}...");
+        let started_at = Instant::now();
+        info!("download started");
 
         if output_dir.is_file() {
             return Err(PlayError::InvalidOutputDirectory(output_dir.to_path_buf()));
         }
         tokio::fs::create_dir_all(output_dir).await?;
 
-        let details = self.get_app_details_by_package_name(&package_name).await?;
+        let details = self.get_app_details_by_package_name(package_name).await?;
         let app_details =
             details.item.clone().and_then(|item| item.details).and_then(|details| details.app_details).ok_or_else(|| PlayError::MissingAppDetails)?;
 
@@ -620,25 +725,28 @@ impl GooglePlayApi {
         let ot =
             offer_type.unwrap_or(details.item.clone().and_then(|item| item.offer.into_iter().next()).and_then(|offer| offer.offer_type).unwrap_or(1));
 
-        let delivery_response = self.purchase(&package_name, vc, ot, certificate_hash, split_module, installed_version_code, patch_format).await?;
+        let span = tracing::Span::current();
+        span.record("version_code", vc);
+        span.record("offer_type", ot);
 
-        let files = self.parse_delivery_response(&package_name, delivery_response)?;
+        let delivery_response = self.purchase(package_name, vc, ot, certificate_hash, split_module, installed_version_code, patch_format).await?;
+
+        let files = self.parse_delivery_response(package_name, delivery_response)?;
 
         let mut downloaded_paths = Vec::new();
+        let mut downloaded_bytes = 0_u64;
         if files.len() == 1 {
             let file = &files[0];
-            let data = self.client.get(&file.url).send().await?.bytes().await?;
             let output_path = output_dir.join(custom_apk_name.clone().unwrap_or_else(|| file.name.clone()));
-            tokio::fs::write(&output_path, &data).await?;
+            downloaded_bytes = downloaded_bytes.saturating_add(self.save_play_file(file, &output_path).await?);
             downloaded_paths.push(output_path);
         } else {
             for file in files.iter() {
                 if file.file_type == PlayFileType::Dex && !include_dex {
                     continue;
                 }
-                let data = self.client.get(&file.url).send().await?.bytes().await?;
                 let output_path = output_dir.join(&file.name);
-                tokio::fs::write(&output_path, &data).await?;
+                downloaded_bytes = downloaded_bytes.saturating_add(self.save_play_file(file, &output_path).await?);
                 downloaded_paths.push(output_path);
             }
             if use_xapk {
@@ -648,9 +756,50 @@ impl GooglePlayApi {
             }
         }
 
-        info!("Download complete for {package_name}: {} file(s)", downloaded_paths.len());
-        debug!("Downloaded files: {:#?}", downloaded_paths);
+        info!(file_count = downloaded_paths.len(), downloaded_bytes, elapsed_ms = elapsed_ms(started_at), "download complete");
         Ok(downloaded_paths)
+    }
+
+    async fn save_play_file(&self, file: &PlayFile, output_path: &Path) -> Result<u64, PlayError> {
+        let method = "GET";
+        let route = "artifact";
+        let started_at = Instant::now();
+        let request_id = next_request_id();
+        debug!(request_id, file_type = %file.file_type, expected_bytes = file.size, "file download started");
+
+        let response = self.client.get(&file.url).send().await.map_err(|error| PlayError::http_request(method, route, error))?;
+        let status = response.status();
+        let response = match response.error_for_status() {
+            Ok(response) => response,
+            Err(error) => {
+                debug!(
+                    http.method = method,
+                    http.route = route,
+                    request_id,
+                    http.status = status.as_u16(),
+                    elapsed_ms = elapsed_ms(started_at),
+                    "response"
+                );
+                return Err(PlayError::http_request(method, route, error));
+            }
+        };
+        let data = response.bytes().await.map_err(|error| PlayError::http_request(method, route, error))?;
+        let byte_count = data.len();
+
+        validate_download_size(file.size, byte_count)?;
+
+        tokio::fs::write(output_path, &data).await?;
+        debug!(
+            http.method = method,
+            http.route = route,
+            request_id,
+            http.status = status.as_u16(),
+            file_type = %file.file_type,
+            byte_count,
+            elapsed_ms = elapsed_ms(started_at),
+            "file download complete"
+        );
+        Ok(byte_count as u64)
     }
 
     pub async fn download_app_request(&self, request: DownloadAppRequest) -> Result<Vec<PathBuf>, PlayError> {
@@ -732,14 +881,23 @@ impl GooglePlayApi {
         .await
         .map_err(|e| std::io::Error::other(format!("zip task failed: {e}")))?;
 
-        for play_file in &files {
-            let _ = tokio::fs::remove_file(output_dir.join(&play_file.name)).await;
-        }
-        let _ = tokio::fs::remove_file(&manifest_path).await;
-
         result?;
 
-        info!("XAPK created: {}", path_to_return.display());
+        let mut cleanup_failures = 0_usize;
+        let input_file_count = files.iter().filter(|file| include_dex || file.file_type != PlayFileType::Dex).count();
+        for play_file in files.iter().filter(|file| include_dex || file.file_type != PlayFileType::Dex) {
+            if tokio::fs::remove_file(output_dir.join(&play_file.name)).await.is_err() {
+                cleanup_failures += 1;
+            }
+        }
+        if tokio::fs::remove_file(&manifest_path).await.is_err() {
+            cleanup_failures += 1;
+        }
+
+        if cleanup_failures > 0 {
+            warn!(cleanup_failures, "xapk cleanup incomplete");
+        }
+        debug!(input_file_count, "xapk created");
         Ok(path_to_return)
     }
 
@@ -805,7 +963,7 @@ impl GooglePlayApi {
                 // I don't think XAPK manifest has a standard way to include DEX files?
                 // https://openxapkfile.net/manifest.html
                 PlayFileType::Dex if include_dex => {
-                    warn!("Cannot include DEX files in XAPK manifest");
+                    warn!("dex file omitted from xapk manifest");
                 }
                 _ => {}
             }
@@ -891,5 +1049,36 @@ impl GooglePlayApi {
         }
 
         Ok(files)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PlayFile, PlayFileType, validate_download_size};
+
+    #[test]
+    fn play_file_debug_output_redacts_the_url() {
+        let file = PlayFile {
+            name: "base.apk".to_owned(),
+            url: "https://example.invalid/base.apk?token=secret".to_owned(),
+            size: 10,
+            file_type: PlayFileType::Base,
+        };
+
+        let rendered = format!("{file:?}");
+        assert!(!rendered.contains("token=secret"));
+        assert!(rendered.contains("<redacted>"));
+    }
+
+    #[test]
+    fn download_size_mismatches_fail() {
+        let error = validate_download_size(10, 9).expect_err("size mismatch should fail");
+        assert!(error.to_string().contains("expected 10 bytes, got 9"));
+    }
+
+    #[test]
+    fn negative_download_sizes_fail() {
+        let error = validate_download_size(-1, 0).expect_err("negative size should fail");
+        assert!(error.to_string().contains("invalid download size: -1"));
     }
 }

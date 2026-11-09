@@ -252,7 +252,7 @@ impl Device {
         let mut device = Device { codename, locale, properties, raw_properties };
 
         device.check_compatibility()?;
-        debug!("Device initialized: {device}");
+        debug!(device = device.codename(), locale = ?device.locale(), "device ready");
         Ok(device)
     }
 

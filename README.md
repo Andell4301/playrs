@@ -17,3 +17,17 @@ This is an unofficial client for interacting with Google Play APIs. It is not af
 - I also have a python version I update in tandem: [pyplay](https://github.com/Andell4301/pyplay)
 
 I'm still fairly new to Rust, so there may be some rough edges.
+
+## Logging
+
+Logs go to stderr; command output goes to stdout. The default level for `playrs` is `info`. Set `RUST_LOG` to change it:
+
+```sh
+RUST_LOG=playrs=debug playrs ...
+RUST_LOG=off playrs ...
+```
+
+Without `RUST_LOG`, use `-v` for debug logs, `-vv` for trace logs, or `--quiet` for errors only.
+
+Playrs logs omit complete credential values and URL query strings. Sufficiently long, printable token fields in `AuthData` debug output show only a three-character prefix and suffix; short or non-printable tokens, emails, cookies, and IDs remain redacted.
+`auth-info` prints the complete GSF ID and auth token to stdout.

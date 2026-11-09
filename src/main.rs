@@ -1,13 +1,19 @@
 use anyhow::{Result, anyhow, bail};
-use clap::{Args, Parser, Subcommand};
+use clap::{ArgAction, Args, Parser, Subcommand};
 use playrs::{GooglePlayApi, MessageJsonExt, constants::PatchFormat};
-use std::{fs, path::PathBuf};
+use std::{fs, path::PathBuf, process::ExitCode};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 
-#[derive(Debug, Parser)]
+#[derive(Parser)]
 #[command(author, version, about)]
 struct Cli {
+    #[arg(short, long, action = ArgAction::Count, global = true, conflicts_with = "quiet")]
+    verbose: u8,
+
+    #[arg(short, long, global = true, conflicts_with = "verbose")]
+    quiet: bool,
+
     #[command(flatten)]
     auth: AuthArgs,
 
@@ -15,14 +21,14 @@ struct Cli {
     command: Command,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Subcommand)]
 enum Command {
     Download(DownloadArgs),
     AppDetails(AppDetailsArgs),
     AuthInfo,
 }
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 struct AuthArgs {
     #[arg(long)]
     gsf_id: Option<String>,
@@ -40,7 +46,7 @@ struct AuthArgs {
     device_locale: Option<String>,
 }
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 struct DownloadArgs {
     #[arg(long)]
     package_name: String,
@@ -66,7 +72,7 @@ struct DownloadArgs {
     include_dex: bool,
 }
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 struct AppDetailsArgs {
     #[arg(long)]
     package_name: String,
@@ -77,10 +83,20 @@ struct AppDetailsArgs {
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    tracing_subscriber::fmt().with_env_filter(EnvFilter::from_default_env().add_directive("playrs=debug".parse()?)).init();
+async fn main() -> ExitCode {
+    match run().await {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("error: {error}");
+            ExitCode::FAILURE
+        }
+    }
+}
 
+async fn run() -> Result<()> {
     let cli = Cli::parse();
+    init_tracing(&cli)?;
+
     let mut api = build_api(&cli.auth)?;
     api.setup(false).await?;
 
@@ -111,6 +127,30 @@ async fn main() -> Result<()> {
         }
     }
 
+    Ok(())
+}
+
+fn init_tracing(cli: &Cli) -> Result<()> {
+    let filter = if std::env::var_os(EnvFilter::DEFAULT_ENV).is_some() {
+        EnvFilter::try_from_default_env()?
+    } else {
+        let level = if cli.quiet {
+            "error"
+        } else {
+            match cli.verbose {
+                0 => "info",
+                1 => "debug",
+                _ => "trace",
+            }
+        };
+        EnvFilter::try_new(format!("playrs={level}"))?
+    };
+
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(std::io::stderr)
+        .try_init()
+        .map_err(|error| anyhow!("failed to initialize logging: {error}"))?;
     Ok(())
 }
 
@@ -183,7 +223,8 @@ async fn write_app_details_json(api: &GooglePlayApi, args: &AppDetailsArgs) -> R
     }
 
     fs::write(&args.output_file, json)?;
-    info!("Wrote app details JSON to {}", args.output_file.display());
+    let file_name = args.output_file.file_name().and_then(|name| name.to_str()).unwrap_or("<unknown>");
+    info!(file = file_name, "wrote app details");
     Ok(())
 }
 
